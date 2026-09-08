@@ -1,0 +1,6 @@
+{
+  "name": "Knight of the Last Dawn",
+  "description": "A cinematic 2D pixel-art action-adventure side-scroller following Sir Cael through the dying kingdom of Eldoria to the Tower of Dawn.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
