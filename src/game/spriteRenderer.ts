@@ -1,35 +1,9 @@
 import { PlayerStats, PlayerAction, Direction, Enemy, EnemyType, Projectile, Platform, Landmark, MemoryShard } from '../types';
-import {
-  PALETTE,
-  drawPixelRect,
-  drawPixelCrystal,
-  disableImageSmoothing,
-  enforceSpritePalette,
-  snapColorToPalette
-} from './pixelArtHelper';
+import { PALETTE, drawPixelRect, drawPixelCrystal } from './pixelArtHelper';
 
 export class SpriteRenderer {
-  public strictPaletteConstraint: boolean = true;
-
-  /**
-   * Enforces strict 8-bit palette constraint across the sprite bounding box.
-   * Snaps all pixels strictly to PALETTE and removes any anti-aliased edge halos.
-   */
-  public enforcePalette(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    alphaThreshold: number = 128
-  ): void {
-    if (!this.strictPaletteConstraint) return;
-    enforceSpritePalette(ctx, x, y, w, h, alphaThreshold);
-  }
-
   // ================= SIR CAEL (8-BIT PLAYER SPRITE) =================
   public renderPlayer(ctx: CanvasRenderingContext2D, p: PlayerStats, camX: number, camY: number, time: number) {
-    disableImageSmoothing(ctx);
     const rx = Math.floor(p.x - camX);
     const ry = Math.floor(p.y - camY);
 
@@ -292,13 +266,11 @@ export class SpriteRenderer {
     }
 
     ctx.restore();
-    this.enforcePalette(ctx, rx - 24, ry - 28, p.width + 54, p.height + 36);
   }
 
   // ================= 8-BIT ENEMIES =================
   public renderEnemy(ctx: CanvasRenderingContext2D, e: Enemy, camX: number, camY: number, time: number) {
     if (e.state === 'dead') return;
-    disableImageSmoothing(ctx);
 
     const rx = Math.floor(e.x - camX);
     const ry = Math.floor(e.y - camY);
@@ -539,12 +511,10 @@ export class SpriteRenderer {
     }
 
     ctx.restore();
-    this.enforcePalette(ctx, rx - 36, ry - 36, e.width + 72, e.height + 56);
   }
 
   // ================= 8-BIT PROJECTILES =================
   public renderProjectile(ctx: CanvasRenderingContext2D, p: Projectile, camX: number, camY: number) {
-    disableImageSmoothing(ctx);
     const rx = Math.floor(p.x - camX);
     const ry = Math.floor(p.y - camY);
 
@@ -565,13 +535,10 @@ export class SpriteRenderer {
       drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx - 3, ry - 8, 6, 16);
     }
     ctx.restore();
-    const pr = Math.max(10, Math.ceil(p.radius || 8));
-    this.enforcePalette(ctx, rx - pr, ry - pr - 4, pr * 2, pr * 2 + 8);
   }
 
   // ================= 8-BIT TILES & PLATFORMS =================
   public renderPlatform(ctx: CanvasRenderingContext2D, plat: Platform, camX: number, camY: number) {
-    disableImageSmoothing(ctx);
     const rx = Math.floor(plat.x - camX);
     const ry = Math.floor(plat.y - camY);
     const w = Math.floor(plat.width);
@@ -652,7 +619,6 @@ export class SpriteRenderer {
 
   // ================= 8-BIT LANDMARKS & SHRINES =================
   public renderLandmark(ctx: CanvasRenderingContext2D, lm: Landmark, camX: number, camY: number, time: number) {
-    disableImageSmoothing(ctx);
     const rx = Math.floor(lm.x - camX);
     const ry = Math.floor(lm.y - camY);
 
@@ -686,12 +652,10 @@ export class SpriteRenderer {
       drawPixelRect(ctx, pColor, rx + 4, ry + 4, lm.width - 8, lm.height - 4);
     }
     ctx.restore();
-    this.enforcePalette(ctx, rx - 4, ry - 4, lm.width + 8, lm.height + 8);
   }
 
   // ================= 8-BIT MEMORY SHARD =================
   public renderMemoryShard(ctx: CanvasRenderingContext2D, shard: MemoryShard, camX: number, camY: number, time: number) {
-    disableImageSmoothing(ctx);
     const rx = Math.floor(shard.x - camX);
     // Integer stepped bob
     const bob = Math.floor(Math.sin(time * 3) * 3);
@@ -713,7 +677,6 @@ export class SpriteRenderer {
     drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 8 + sx, ry + 8 + sy, 2, 2);
 
     ctx.restore();
-    this.enforcePalette(ctx, rx - 8, ry - 8, 32, 32);
   }
 }
 

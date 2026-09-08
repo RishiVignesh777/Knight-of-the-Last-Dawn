@@ -41,7 +41,7 @@ import { particleEngine } from './particleSystem';
 import { spriteRenderer } from './spriteRenderer';
 import { parallaxEngine } from './parallaxBackgrounds';
 import { lightingEngine } from './lightingEngine';
-import { PALETTE, drawPixelRect, enforceSpritePalette } from './pixelArtHelper';
+import { PALETTE, drawPixelRect } from './pixelArtHelper';
 
 export class GameEngine {
   public state: GameState = GameState.MENU;
@@ -1065,7 +1065,6 @@ export class GameEngine {
         ctx.fillStyle = PALETTE.SUN_YELLOW;
         ctx.font = '6px monospace';
         ctx.fillText('E: TALK', rx - 8, ry - 7);
-        enforceSpritePalette(ctx, rx - 12, ry - 14, 40, 10);
       }
     }
 

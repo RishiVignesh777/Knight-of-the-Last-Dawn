@@ -1,36 +1,63 @@
 // Authentic 8-Bit Pixel Art Helper & Color Palettes
 // Provides stepped dither patterns, pixel-perfect rasterization, and authentic retro palettes.
 
-import { PALETTE, hexToRgb } from './palette';
-import type { RGB } from './palette';
-import { skySystem } from './skyRenderer';
-import type { DitherPatternType, SkyPhase } from './skyRenderer';
-import {
-  enforcePaletteConstraint,
-  enforceSpritePalette,
-  renderConstrainedSprite,
-  quantizeImageDataToPalette,
-  snapColorToPalette,
-  disableImageSmoothing,
-  getClosestPaletteColor,
-  PALETTE_ENTRIES
-} from './paletteConstraint';
-import type { PaletteEntry } from './paletteConstraint';
+export interface RGB {
+  r: number;
+  g: number;
+  b: number;
+}
 
-export {
-  PALETTE,
-  hexToRgb,
-  skySystem,
-  enforcePaletteConstraint,
-  enforceSpritePalette,
-  renderConstrainedSprite,
-  quantizeImageDataToPalette,
-  snapColorToPalette,
-  disableImageSmoothing,
-  getClosestPaletteColor,
-  PALETTE_ENTRIES
+// Authentic master 8-bit color palette (inspired by classic late-generation 8-bit fantasy games)
+export const PALETTE = {
+  BLACK: '#080808',
+  DARKEST_GRAY: '#181818',
+  DARK_GRAY: '#303030',
+  MID_GRAY: '#585858',
+  LIGHT_GRAY: '#909090',
+  BRIGHT_GRAY: '#c0c0c0',
+  WHITE: '#f8f8f8',
+
+  // Reds & Pinks
+  DEEP_MAROON: '#400010',
+  DARK_RED: '#701018',
+  CRIMSON: '#a81828',
+  BRIGHT_RED: '#d82838',
+  SALMON: '#f86878',
+
+  // Oranges & Ambers
+  DEEP_BROWN: '#381808',
+  RUST: '#682808',
+  AMBER_DARK: '#984008',
+  AMBER: '#c86810',
+  GOLD: '#f8a020',
+  PALE_GOLD: '#f8c858',
+  SUN_YELLOW: '#f8f870',
+
+  // Greens
+  NIGHT_GREEN: '#082010',
+  DARK_PINE: '#104020',
+  MOSS_GREEN: '#206830',
+  FOREST_GREEN: '#389848',
+  BRIGHT_GREEN: '#58c868',
+  MINT_GREEN: '#88f898',
+
+  // Blues & Indigos
+  MIDNIGHT_BLUE: '#080828',
+  DARK_NAVY: '#101848',
+  ROYAL_BLUE: '#183888',
+  STEEL_BLUE: '#3868b8',
+  SKY_BLUE: '#58a8f8',
+  CYAN_HIGHLIGHT: '#88d8f8',
+  ICE_WHITE: '#d8f0f8',
+
+  // Purples & Violets
+  VOID_PURPLE: '#180828',
+  DARK_VIOLET: '#381050',
+  PURPLE: '#682088',
+  MAGENTA: '#9830b0',
+  LAVENDER: '#c868d8',
+  PALE_LILAC: '#f0b0f8'
 };
-export type { RGB, DitherPatternType, SkyPhase, PaletteEntry };
 
 // 4x4 Bayer Dither Matrix for authentic 8-bit gradient dithering
 export const BAYER_4X4 = [
@@ -55,10 +82,28 @@ export function drawDitheredSky(
   y: number,
   width: number,
   height: number,
-  ditherBandHeight: number = 16,
-  pattern: DitherPatternType = 'bayer4x4'
+  ditherBandHeight: number = 16
 ) {
-  skySystem.drawDitheredBand(ctx, colorTop, colorBottom, x, y, width, height, ditherBandHeight, pattern);
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const iw = Math.floor(width);
+  const ih = Math.floor(height);
+
+  const transitionY = iy + ih - ditherBandHeight;
+
+  // Solid top color
+  ctx.fillStyle = colorTop;
+  ctx.fillRect(ix, iy, iw, Math.max(0, transitionY - iy));
+
+  // Dithered transition band
+  for (let py = transitionY; py < iy + ih; py += 2) {
+    const factor = (py - transitionY) / ditherBandHeight;
+    for (let px = ix; px < ix + iw; px += 2) {
+      const ditherThreshold = BAYER_4X4[Math.floor((py / 2) % 4)][Math.floor((px / 2) % 4)];
+      ctx.fillStyle = factor > ditherThreshold ? colorBottom : colorTop;
+      ctx.fillRect(px, py, 2, 2);
+    }
+  }
 }
 
 // Helper: draw 8-bit pixel circle with integer coordinates and hard edges

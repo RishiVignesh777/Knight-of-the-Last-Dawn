@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { soundEngine } from '../audio/soundManager';
 import { PlayerStats, MemoryShard } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
-import { skySystem, SkyPhase, DitherPatternType } from '../game/skyRenderer';
 
 interface PauseMenuProps {
   player: PlayerStats;
@@ -24,22 +23,6 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   const [masterVol, setMasterVol] = useState(0.8);
   const [musicVol, setMusicVol] = useState(0.65);
   const [sfxVol, setSfxVol] = useState(0.85);
-  const [skyPhase, setSkyPhase] = useState<SkyPhase>(skySystem.activePhase);
-  const [ditherPattern, setDitherPattern] = useState<DitherPatternType>(skySystem.ditherPattern);
-
-  const handleToggleSkyPhase = () => {
-    const next = skySystem.toggleSkyPhase();
-    setSkyPhase(next);
-    soundEngine.playMenuBeep(false);
-  };
-
-  const handleToggleDitherPattern = () => {
-    const patterns: DitherPatternType[] = ['bayer4x4', 'bayer8x8', 'scanline', 'checkerboard', 'bayer2x2'];
-    const nextIdx = (patterns.indexOf(skySystem.ditherPattern) + 1) % patterns.length;
-    skySystem.ditherPattern = patterns[nextIdx];
-    setDitherPattern(patterns[nextIdx]);
-    soundEngine.playMenuBeep(false);
-  };
 
   const handleToggleMute = () => {
     const next = !isMuted;
@@ -139,36 +122,6 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               <span>CHIPTUNE AUDIO</span>
               <span className={isMuted ? 'text-[#d82838] font-bold' : 'text-[#58c868] font-bold'}>
                 {isMuted ? 'MUTED' : 'ENABLED'}
-              </span>
-            </button>
-
-            {/* Sky Dither Phase Toggle */}
-            <button
-              onClick={handleToggleSkyPhase}
-              className="flex items-center justify-between px-3 py-2 bg-[#181818] hover:bg-[#303030] text-[#f8f8f8] border-2 border-[#585858] text-xs uppercase cursor-pointer"
-            >
-              <span>SKY DITHER PHASE</span>
-              <span className="text-[#f8a020] font-bold">
-                {skyPhase === 'auto' ? 'CYCLE (AUTO)' : skyPhase.toUpperCase()}
-              </span>
-            </button>
-
-            {/* Dither Matrix Toggle */}
-            <button
-              onClick={handleToggleDitherPattern}
-              className="flex items-center justify-between px-3 py-2 bg-[#181818] hover:bg-[#303030] text-[#f8f8f8] border-2 border-[#585858] text-xs uppercase cursor-pointer"
-            >
-              <span>DITHER MATRIX</span>
-              <span className="text-[#88d8f8] font-bold">
-                {ditherPattern === 'bayer4x4'
-                  ? 'BAYER 4x4'
-                  : ditherPattern === 'bayer8x8'
-                  ? 'BAYER 8x8'
-                  : ditherPattern === 'scanline'
-                  ? 'SCANLINE'
-                  : ditherPattern === 'checkerboard'
-                  ? 'CHECKER 2x2'
-                  : 'BAYER 2x2'}
               </span>
             </button>
 

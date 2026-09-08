@@ -1,7 +1,6 @@
 import { AreaId } from '../types';
 import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from './constants';
 import { PALETTE, drawPixelRect, drawDitheredSky, drawPixelCircle, drawPixelCrystal } from './pixelArtHelper';
-import { skySystem } from './skyRenderer';
 
 export class ParallaxRenderer {
   private birdTimer: number = 0;
@@ -107,18 +106,25 @@ export class ParallaxRenderer {
 
   // ================= AREA 1: THE FORGOTTEN VILLAGE =================
   private renderVillageBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // 1. Pixel-Dithered Sky using restricted Sunset & Twilight palettes + Bayer pattern matrix
-    skySystem.renderSunsetTwilightSky(ctx, camX, camY, this.birdTimer);
+    // 1. Dithered Sunset Sky (Twilight Violet -> Amber Crimson -> Golden Dusk -> Horizon Yellow)
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DEEP_MAROON, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.DEEP_MAROON, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
 
-    // 2. Blocky 8-bit drifting clouds (parallax 0.05)
-    const blend = skySystem.getPhaseBlend(this.birdTimer);
-    const cloudColor = blend > 0.5 ? PALETTE.DARK_VIOLET : PALETTE.DEEP_MAROON;
+    // 2. Distant Pixel-Art Setting Sun (large pixel circle)
+    const sunX = Math.floor(VIRTUAL_WIDTH * 0.72 - (camX * 0.02));
+    const sunY = Math.floor(55 - (camY * 0.02));
+    drawPixelCircle(ctx, PALETTE.SUN_YELLOW, sunX, sunY, 16);
+    drawPixelCircle(ctx, PALETTE.WHITE, sunX, sunY, 8);
+
+    // 3. Blocky 8-bit drifting clouds (parallax 0.05)
     const cloudShift = Math.floor(this.cloudOffset * 0.3 - camX * 0.04) % (VIRTUAL_WIDTH + 80);
     for (let c = -80; c < VIRTUAL_WIDTH + 100; c += 110) {
       const cx = c + cloudShift;
-      drawPixelRect(ctx, cloudColor, cx, 28, 55, 8);
-      drawPixelRect(ctx, cloudColor, cx + 8, 22, 36, 8);
-      drawPixelRect(ctx, cloudColor, cx + 16, 18, 18, 6);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx, 28, 55, 8);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx + 8, 22, 36, 8);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx + 16, 18, 18, 6);
     }
 
     // 4. Distant 8-bit birds flying in V-formation
@@ -181,7 +187,9 @@ export class ParallaxRenderer {
   // ================= AREA 2: THE WHISPERING FOREST =================
   private renderForestBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
     // 1. Deep Emerald-to-Navy Dithered Canopy Sky
-    skySystem.renderAreaSky(ctx, AreaId.FOREST, camX, camY, this.birdTimer);
+    drawDitheredSky(ctx, PALETTE.NIGHT_GREEN, PALETTE.DARK_PINE, 0, 0, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.DARK_PINE, PALETTE.MOSS_GREEN, 0, 60, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.MOSS_GREEN, PALETTE.FOREST_GREEN, 0, 120, VIRTUAL_WIDTH, 60, 16);
 
     // 2. Layered Pixel Fog Bands scrolling horizontally
     const fogShift = Math.floor(this.cloudOffset * 0.4 - camX * 0.08) % (VIRTUAL_WIDTH + 80);
@@ -224,7 +232,8 @@ export class ParallaxRenderer {
   // ================= AREA 3: THE MOONLIT LAKE =================
   private renderLakeBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
     // 1. Nocturnal Deep Indigo Cosmos Sky
-    skySystem.renderAreaSky(ctx, AreaId.LAKE, camX, camY, this.birdTimer);
+    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.MIDNIGHT_BLUE, 0, 0, VIRTUAL_WIDTH, 55, 14);
+    drawDitheredSky(ctx, PALETTE.MIDNIGHT_BLUE, PALETTE.DARK_NAVY, 0, 55, VIRTUAL_WIDTH, 55, 14);
 
     // 2. 1-Pixel Twinkling Stars
     for (let s = 0; s < 30; s++) {
@@ -286,7 +295,9 @@ export class ParallaxRenderer {
       return;
     }
 
-    skySystem.renderAreaSky(ctx, AreaId.CAPITAL, camX, camY, this.birdTimer);
+    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.VOID_PURPLE, 0, 0, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DARK_VIOLET, 0, 60, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.DARK_VIOLET, PALETTE.PURPLE, 0, 120, VIRTUAL_WIDTH, 60, 16);
 
     // 2. Rolling Ominous Storm Clouds
     const cloudShift = Math.floor(this.cloudOffset * 0.5 - camX * 0.08) % (VIRTUAL_WIDTH + 100);
@@ -334,7 +345,10 @@ export class ParallaxRenderer {
   // ================= AREA 5: THE TOWER OF DAWN =================
   private renderTowerBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
     // 1. Radiant Gold-to-Violet Dawn Dithered Sky
-    skySystem.renderAreaSky(ctx, AreaId.TOWER, camX, camY, this.birdTimer);
+    drawDitheredSky(ctx, PALETTE.DARK_VIOLET, PALETTE.PURPLE, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.PURPLE, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
 
     // 2. Radiant Rising Sun at Summit
     const sunX = Math.floor(VIRTUAL_WIDTH * 0.65 - (camX * 0.02));
@@ -380,13 +394,21 @@ export class ParallaxRenderer {
   // ================= TITLE SCREEN VISTA (Section 2 & 26) =================
   public renderTitleScreenVista(ctx: CanvasRenderingContext2D, time: number) {
     // Dramatic composition:
-    // Pixel-dithered sunset/twilight sky, setting sun with dithered halo, castle on distant mountain horizon,
+    // Dithered sunset sky, setting sun, castle on distant mountain horizon,
     // and Sir Cael standing as a tiny 8-bit knight on a rocky cliff edge in the foreground!
 
-    // 1. Sky & Sun (Pixel-dithered pattern system with restricted sunset/twilight palette)
-    skySystem.renderTitleScreenSky(ctx, time);
+    // 1. Sky
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DEEP_MAROON, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.DEEP_MAROON, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
 
-    // 2. Clouds
+    // 2. Giant Setting Sun slowly descending behind mountains
+    const sunY = Math.floor(70 + Math.sin(time * 0.2) * 5);
+    drawPixelCircle(ctx, PALETTE.SUN_YELLOW, 225, sunY, 20);
+    drawPixelCircle(ctx, PALETTE.WHITE, 225, sunY, 10);
+
+    // 3. Clouds
     const cloudShift = Math.floor(time * 3) % (VIRTUAL_WIDTH + 80);
     drawPixelRect(ctx, PALETTE.DEEP_MAROON, 40 + cloudShift, 25, 60, 8);
     drawPixelRect(ctx, PALETTE.DEEP_MAROON, 50 + cloudShift, 20, 40, 7);
