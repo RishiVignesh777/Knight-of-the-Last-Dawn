@@ -1,18 +1,18 @@
-// Game internal resolution - authentic 16:9 pixel aspect ratio
-export const VIRTUAL_WIDTH = 480;
-export const VIRTUAL_HEIGHT = 270;
+// Game internal resolution - authentic 8-bit 16:9 pixel resolution (320x180)
+export const VIRTUAL_WIDTH = 320;
+export const VIRTUAL_HEIGHT = 180;
 
-// Physics constants
-export const GRAVITY = 720; // px/sec^2
-export const MAX_FALL_SPEED = 420;
-export const WALK_SPEED = 90;
-export const RUN_SPEED = 140;
-export const JUMP_FORCE = -270;
-export const DASH_SPEED = 280;
-export const DASH_DURATION = 0.22; // seconds
-export const DASH_COOLDOWN = 0.65;
+// Physics constants tuned for crisp 8-bit platforming
+export const GRAVITY = 640; // px/sec^2
+export const MAX_FALL_SPEED = 360;
+export const WALK_SPEED = 85;
+export const RUN_SPEED = 125;
+export const JUMP_FORCE = -240;
+export const DASH_SPEED = 240;
+export const DASH_DURATION = 0.20; // seconds
+export const DASH_COOLDOWN = 0.55;
 export const INVINCIBLE_TIME_AFTER_HIT = 1.0;
-export const CLIMB_SPEED = 85;
+export const CLIMB_SPEED = 75;
 
 // Player Combat stats
 export const PLAYER_MAX_HP = 100;

@@ -1,26 +1,27 @@
 import { AreaId } from '../types';
 import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from './constants';
+import { PALETTE, drawPixelRect, drawDitheredSky, drawPixelCircle, drawPixelCrystal } from './pixelArtHelper';
 
 export class ParallaxRenderer {
   private birdTimer: number = 0;
   private cloudOffset: number = 0;
   private waterAnimTimer: number = 0;
   private lightningTimer: number = 0;
-  private lightningFlash: number = 0;
+  private lightningFlash: boolean = false;
 
   public update(dt: number) {
     this.birdTimer += dt;
-    this.cloudOffset += dt * 8;
-    this.waterAnimTimer += dt * 3.5;
-    
+    this.cloudOffset += dt * 6;
+    this.waterAnimTimer += dt * 4;
+
     // Capital lightning flash timer
     this.lightningTimer += dt;
-    if (this.lightningTimer > 4.5 + Math.random() * 4) {
+    if (this.lightningTimer > 5.0 + Math.random() * 4) {
       this.lightningTimer = 0;
-      this.lightningFlash = 0.25;
-    }
-    if (this.lightningFlash > 0) {
-      this.lightningFlash = Math.max(0, this.lightningFlash - dt * 2.5);
+      this.lightningFlash = true;
+      setTimeout(() => {
+        this.lightningFlash = false;
+      }, 100);
     }
   }
 
@@ -55,447 +56,411 @@ export class ParallaxRenderer {
     cameraX: number,
     cameraY: number
   ) {
-    // Layer 1: Foreground elements moving faster than gameplay (parallax ratio 1.25)
-    const fgOffsetX = -(cameraX * 1.25) % VIRTUAL_WIDTH;
+    const fgOffsetX = Math.floor(-(cameraX * 1.25)) % VIRTUAL_WIDTH;
 
     ctx.save();
     if (areaId === AreaId.VILLAGE) {
-      // Swaying dark foreground grass tufts and ruined fence posts
-      ctx.fillStyle = '#1c1917';
-      for (let x = -40; x < VIRTUAL_WIDTH + 80; x += 48) {
+      // 8-bit foreground fence posts & dark silhouette grass tufts
+      for (let x = -30; x < VIRTUAL_WIDTH + 60; x += 36) {
         const drawX = Math.floor(x + fgOffsetX);
-        const sway = Math.sin(this.birdTimer * 2 + x) * 3;
-        // Grass blades
-        ctx.fillRect(drawX, VIRTUAL_HEIGHT - 18, 3, 18);
-        ctx.fillRect(drawX + 4 + sway, VIRTUAL_HEIGHT - 24, 2, 24);
-        ctx.fillRect(drawX + 8, VIRTUAL_HEIGHT - 14, 3, 14);
-        if (x % 96 === 0) {
-          // Weathered fence post
-          ctx.fillRect(drawX + 16, VIRTUAL_HEIGHT - 32, 6, 32);
-          ctx.fillRect(drawX + 14, VIRTUAL_HEIGHT - 26, 10, 4);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX, VIRTUAL_HEIGHT - 12, 2, 12);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 3, VIRTUAL_HEIGHT - 16, 2, 16);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 6, VIRTUAL_HEIGHT - 10, 2, 10);
+        if (x % 72 === 0) {
+          drawPixelRect(ctx, PALETTE.DARKEST_GRAY, drawX + 12, VIRTUAL_HEIGHT - 22, 4, 22);
+          drawPixelRect(ctx, PALETTE.DARKEST_GRAY, drawX + 10, VIRTUAL_HEIGHT - 18, 8, 3);
         }
       }
     } else if (areaId === AreaId.FOREST) {
-      // Hanging ancient roots & giant mossy ferns
-      ctx.fillStyle = '#064e3b';
-      for (let x = -20; x < VIRTUAL_WIDTH + 60; x += 64) {
+      // 8-bit Hanging ancient vines from top
+      for (let x = -20; x < VIRTUAL_WIDTH + 40; x += 48) {
         const drawX = Math.floor(x + fgOffsetX);
-        const vineLength = 28 + ((x * 13) % 40);
-        const sway = Math.sin(this.birdTimer * 1.5 + x) * 4;
-        ctx.fillRect(drawX + sway, 0, 3, vineLength);
-        // Hanging leaves
-        ctx.fillRect(drawX - 3 + sway, vineLength - 8, 8, 4);
-        ctx.fillRect(drawX - 1 + sway, vineLength - 2, 5, 5);
-      }
-      // Foreground bottom giant ferns
-      ctx.fillStyle = '#022c22';
-      for (let x = -30; x < VIRTUAL_WIDTH + 60; x += 55) {
-        const drawX = Math.floor(x + fgOffsetX);
-        ctx.fillRect(drawX, VIRTUAL_HEIGHT - 20, 6, 20);
-        ctx.fillRect(drawX - 8, VIRTUAL_HEIGHT - 16, 22, 6);
+        const vineLen = 18 + ((x * 7) % 24);
+        drawPixelRect(ctx, PALETTE.NIGHT_GREEN, drawX, 0, 2, vineLen);
+        drawPixelRect(ctx, PALETTE.DARK_PINE, drawX - 2, vineLen - 4, 6, 3);
       }
     } else if (areaId === AreaId.LAKE) {
-      // Foreground damp reeds and rocky cliff corner
-      ctx.fillStyle = '#091326';
-      for (let x = -30; x < VIRTUAL_WIDTH + 60; x += 40) {
+      // 8-bit water reeds
+      for (let x = -20; x < VIRTUAL_WIDTH + 40; x += 28) {
         const drawX = Math.floor(x + fgOffsetX);
-        const reedSway = Math.sin(this.waterAnimTimer + x * 0.1) * 2;
-        ctx.fillRect(drawX + reedSway, VIRTUAL_HEIGHT - 22, 2, 22);
-        ctx.fillRect(drawX + 5, VIRTUAL_HEIGHT - 16, 2, 16);
+        drawPixelRect(ctx, PALETTE.MIDNIGHT_BLUE, drawX, VIRTUAL_HEIGHT - 16, 2, 16);
+        drawPixelRect(ctx, PALETTE.MIDNIGHT_BLUE, drawX + 4, VIRTUAL_HEIGHT - 12, 2, 12);
       }
     } else if (areaId === AreaId.CAPITAL) {
-      // Foreground cracked balustrade & burning ember brazier silhouette
-      ctx.fillStyle = '#0a050f';
-      for (let x = -20; x < VIRTUAL_WIDTH + 60; x += 80) {
+      // 8-bit cracked stone battlements
+      for (let x = -20; x < VIRTUAL_WIDTH + 40; x += 64) {
         const drawX = Math.floor(x + fgOffsetX);
-        ctx.fillRect(drawX, VIRTUAL_HEIGHT - 28, 8, 28);
-        ctx.fillRect(drawX - 6, VIRTUAL_HEIGHT - 26, 20, 5);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX, VIRTUAL_HEIGHT - 20, 6, 20);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX - 4, VIRTUAL_HEIGHT - 18, 14, 4);
       }
     } else if (areaId === AreaId.TOWER) {
-      // Foreground floating crystalline shards and golden light motes
-      ctx.fillStyle = 'rgba(254, 240, 138, 0.25)';
-      for (let i = 0; i < 8; i++) {
-        const px = Math.floor((i * 65 + fgOffsetX * 0.8 + VIRTUAL_WIDTH * 2) % VIRTUAL_WIDTH);
-        const py = Math.floor(40 + (i * 28) + Math.sin(this.birdTimer + i) * 12);
-        ctx.fillRect(px, py, 3, 3);
-        ctx.fillRect(px + 1, py - 1, 1, 5);
+      // 8-bit golden crystal sparkles floating
+      for (let i = 0; i < 6; i++) {
+        const px = Math.floor((i * 55 + fgOffsetX * 0.8 + VIRTUAL_WIDTH * 2) % VIRTUAL_WIDTH);
+        const py = Math.floor(20 + i * 25 + Math.sin(this.birdTimer + i) * 8);
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, px, py, 2, 2);
       }
     }
     ctx.restore();
   }
 
-  // ================= AREA 1: VILLAGE (Sunset / Castle in Distance / Ruins) =================
+  // ================= AREA 1: THE FORGOTTEN VILLAGE =================
   private renderVillageBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // Layer 7: Golden Sunset Gradient Sky
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, VIRTUAL_HEIGHT);
-    skyGrad.addColorStop(0, '#2e1065');   // Deep twilight violet
-    skyGrad.addColorStop(0.35, '#7c2d12'); // Amber crimson
-    skyGrad.addColorStop(0.7, '#d97706');  // Golden dusk
-    skyGrad.addColorStop(1.0, '#fef08a');  // Warm horizon glow
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    // 1. Dithered Sunset Sky (Twilight Violet -> Amber Crimson -> Golden Dusk -> Horizon Yellow)
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DEEP_MAROON, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.DEEP_MAROON, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
 
-    // Distant setting sun
-    const sunX = VIRTUAL_WIDTH * 0.72 - (camX * 0.02);
-    const sunY = 70 - (camY * 0.02);
-    ctx.fillStyle = '#fef08a';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 22, 0, Math.PI * 2);
-    ctx.fill();
-    // Sun rays
-    ctx.fillStyle = 'rgba(254, 240, 138, 0.15)';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 44, 0, Math.PI * 2);
-    ctx.fill();
+    // 2. Distant Pixel-Art Setting Sun (large pixel circle)
+    const sunX = Math.floor(VIRTUAL_WIDTH * 0.72 - (camX * 0.02));
+    const sunY = Math.floor(55 - (camY * 0.02));
+    drawPixelCircle(ctx, PALETTE.SUN_YELLOW, sunX, sunY, 16);
+    drawPixelCircle(ctx, PALETTE.WHITE, sunX, sunY, 8);
 
-    // Layer 6: Drifting sunset clouds (parallax 0.06)
-    ctx.fillStyle = 'rgba(124, 45, 18, 0.45)';
-    const cloudShift = (this.cloudOffset * 0.3 - camX * 0.05) % (VIRTUAL_WIDTH + 100);
-    for (let c = -100; c < VIRTUAL_WIDTH + 150; c += 140) {
+    // 3. Blocky 8-bit drifting clouds (parallax 0.05)
+    const cloudShift = Math.floor(this.cloudOffset * 0.3 - camX * 0.04) % (VIRTUAL_WIDTH + 80);
+    for (let c = -80; c < VIRTUAL_WIDTH + 100; c += 110) {
       const cx = c + cloudShift;
-      ctx.fillRect(cx, 35, 75, 14);
-      ctx.fillRect(cx + 12, 28, 48, 12);
-      ctx.fillRect(cx + 25, 22, 24, 8);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx, 28, 55, 8);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx + 8, 22, 36, 8);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, cx + 16, 18, 18, 6);
     }
 
-    // Distant birds flying in V-formation
-    ctx.fillStyle = '#451a03';
-    const birdBaseX = ((this.birdTimer * 14 - camX * 0.04) % (VIRTUAL_WIDTH + 80)) - 40;
-    const birdY = 48 + Math.sin(this.birdTimer) * 4;
+    // 4. Distant 8-bit birds flying in V-formation
+    const birdBaseX = Math.floor(((this.birdTimer * 12 - camX * 0.03) % (VIRTUAL_WIDTH + 60)) - 30);
+    const birdY = Math.floor(38 + Math.sin(this.birdTimer * 0.8) * 3);
     for (let b = 0; b < 4; b++) {
-      const bx = Math.floor(birdBaseX + b * 9);
-      const by = Math.floor(birdY + Math.abs(b - 2) * 5);
-      const wing = Math.sin(this.birdTimer * 8 + b) > 0 ? -1 : 1;
-      ctx.fillRect(bx, by, 2, 2);
-      ctx.fillRect(bx - 2, by + wing, 2, 1);
-      ctx.fillRect(bx + 2, by + wing, 2, 1);
+      const bx = birdBaseX + b * 7;
+      const by = birdY + Math.abs(b - 2) * 4;
+      const flap = Math.floor(this.birdTimer * 6 + b) % 2 === 0 ? 0 : 1;
+      drawPixelRect(ctx, PALETTE.BLACK, bx, by, 2, 1);
+      drawPixelRect(ctx, PALETTE.BLACK, bx - 1, by - flap, 1, 1);
+      drawPixelRect(ctx, PALETTE.BLACK, bx + 2, by - flap, 1, 1);
     }
 
-    // Layer 5: Distant jagged mountain ranges (parallax 0.12)
-    const mtnOffsetX = -(camX * 0.12) % 360;
-    ctx.fillStyle = '#431407';
-    for (let i = -360; i < VIRTUAL_WIDTH + 360; i += 180) {
-      const mx = Math.floor(i + mtnOffsetX);
-      ctx.beginPath();
-      ctx.moveTo(mx, VIRTUAL_HEIGHT - 60);
-      ctx.lineTo(mx + 90, 85);
-      ctx.lineTo(mx + 180, VIRTUAL_HEIGHT - 60);
-      ctx.fill();
+    // 5. Distant jagged mountain ridges (parallax 0.12)
+    const mtnX = Math.floor(-(camX * 0.12)) % 240;
+    for (let i = -240; i < VIRTUAL_WIDTH + 240; i += 120) {
+      const mx = i + mtnX;
+      // Stepped mountain slopes
+      for (let s = 0; s < 60; s += 4) {
+        const span = s * 2;
+        drawPixelRect(ctx, PALETTE.DEEP_BROWN, mx + 60 - s, 70 + s, span, 4);
+      }
     }
 
-    // Layer 4: Distant Ruined Castle & Rising Smoke on the horizon (parallax 0.22)
-    const castleX = Math.floor(280 - (camX * 0.22));
-    const castleY = VIRTUAL_HEIGHT - 150;
-    ctx.fillStyle = '#292524';
-    // Colossal ruined keep & spires
-    ctx.fillRect(castleX, castleY + 30, 90, 80);
-    ctx.fillRect(castleX - 25, castleY + 45, 30, 65);
-    ctx.fillRect(castleX + 85, castleY + 40, 35, 70);
-    // Broken battlements
-    ctx.fillRect(castleX + 10, castleY + 12, 18, 22);
-    ctx.fillRect(castleX + 45, castleY + 18, 14, 16);
-    ctx.fillRect(castleX + 68, castleY + 10, 16, 24);
-    // Smoke rising from the ruins into the sky
-    ctx.fillStyle = 'rgba(68, 64, 60, 0.4)';
-    for (let s = 0; s < 6; s++) {
-      const smokeOffset = (this.birdTimer * 10 + s * 16) % 90;
-      const sx = castleX + 35 + Math.sin(this.birdTimer + s) * 8;
-      const sy = castleY + 20 - smokeOffset;
-      const sSize = 4 + s * 2;
-      ctx.fillRect(sx, sy, sSize, sSize);
+    // 6. Colossal Ruined Castle on Horizon (parallax 0.22)
+    const castleX = Math.floor(190 - (camX * 0.22));
+    const castleY = VIRTUAL_HEIGHT - 105;
+    // Central Keep & Spire
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX, castleY + 20, 60, 60);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX - 18, castleY + 32, 20, 48);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 58, castleY + 28, 24, 52);
+    // Crenellated battlements
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 8, castleY + 6, 12, 16);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 30, castleY + 10, 10, 12);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 46, castleY + 4, 12, 18);
+
+    // Stepped 8-bit smoke puffs rising from the ruined castle
+    for (let s = 0; s < 5; s++) {
+      const smokeY = Math.floor((this.birdTimer * 8 + s * 14) % 65);
+      const sx = Math.floor(castleX + 24 + Math.sin(this.birdTimer + s) * 5);
+      const sy = castleY + 15 - smokeY;
+      const sSize = 2 + Math.floor(s * 1.2);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, sx, sy, sSize, sSize);
     }
 
-    // Layer 3: Ruined village cottages and silhouetted windmills (parallax 0.42)
-    const midX = -(camX * 0.42) % 320;
-    ctx.fillStyle = '#1c1917';
-    for (let x = -320; x < VIRTUAL_WIDTH + 320; x += 160) {
-      const bx = Math.floor(x + midX);
-      // Ruined cottage roof
-      ctx.beginPath();
-      ctx.moveTo(bx, VIRTUAL_HEIGHT - 55);
-      ctx.lineTo(bx + 35, VIRTUAL_HEIGHT - 95);
-      ctx.lineTo(bx + 70, VIRTUAL_HEIGHT - 55);
-      ctx.fill();
-      ctx.fillRect(bx + 10, VIRTUAL_HEIGHT - 55, 50, 45);
-      // Broken chimney
-      ctx.fillRect(bx + 48, VIRTUAL_HEIGHT - 105, 8, 16);
+    // 7. Silhouetted village cottages & broken windmills (parallax 0.42)
+    const midX = Math.floor(-(camX * 0.42)) % 220;
+    for (let x = -220; x < VIRTUAL_WIDTH + 220; x += 110) {
+      const bx = x + midX;
+      // Stepped cottage roof
+      for (let r = 0; r < 20; r += 2) {
+        drawPixelRect(ctx, PALETTE.BLACK, bx + 24 - r, VIRTUAL_HEIGHT - 65 - (20 - r), r * 2, 2);
+      }
+      drawPixelRect(ctx, PALETTE.BLACK, bx + 4, VIRTUAL_HEIGHT - 65, 40, 35);
+      drawPixelRect(ctx, PALETTE.BLACK, bx + 32, VIRTUAL_HEIGHT - 92, 6, 14); // Chimney
     }
   }
 
-  // ================= AREA 2: FOREST (Ancient trees / Moss / Statues) =================
+  // ================= AREA 2: THE WHISPERING FOREST =================
   private renderForestBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // Layer 7: Emerald twilight canopy
-    const grad = ctx.createLinearGradient(0, 0, 0, VIRTUAL_HEIGHT);
-    grad.addColorStop(0, '#022c22');
-    grad.addColorStop(0.5, '#064e3b');
-    grad.addColorStop(1, '#065f46');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    // 1. Deep Emerald-to-Navy Dithered Canopy Sky
+    drawDitheredSky(ctx, PALETTE.NIGHT_GREEN, PALETTE.DARK_PINE, 0, 0, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.DARK_PINE, PALETTE.MOSS_GREEN, 0, 60, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.MOSS_GREEN, PALETTE.FOREST_GREEN, 0, 120, VIRTUAL_WIDTH, 60, 16);
 
-    // Layer 6: Rolling volumetric pixel fog
-    ctx.fillStyle = 'rgba(6, 78, 59, 0.35)';
-    const fogShift = (this.cloudOffset * 0.4 - camX * 0.08) % (VIRTUAL_WIDTH + 120);
-    for (let f = -120; f < VIRTUAL_WIDTH + 140; f += 130) {
+    // 2. Layered Pixel Fog Bands scrolling horizontally
+    const fogShift = Math.floor(this.cloudOffset * 0.4 - camX * 0.08) % (VIRTUAL_WIDTH + 80);
+    for (let f = -80; f < VIRTUAL_WIDTH + 100; f += 90) {
       const fx = f + fogShift;
-      ctx.fillRect(fx, 110, 90, 30);
-      ctx.fillRect(fx + 20, 95, 60, 20);
+      drawPixelRect(ctx, PALETTE.DARK_PINE, fx, 80, 65, 18);
+      drawPixelRect(ctx, PALETTE.NIGHT_GREEN, fx + 14, 70, 42, 14);
     }
 
-    // Layer 5: Distant mountain ridges & ancient tree silhouettes (parallax 0.15)
-    ctx.fillStyle = '#022c22';
-    const mtnX = -(camX * 0.15) % 300;
-    for (let i = -300; i < VIRTUAL_WIDTH + 300; i += 150) {
-      const mx = Math.floor(i + mtnX);
-      ctx.beginPath();
-      ctx.moveTo(mx, VIRTUAL_HEIGHT - 60);
-      ctx.lineTo(mx + 75, 100);
-      ctx.lineTo(mx + 150, VIRTUAL_HEIGHT - 60);
-      ctx.fill();
+    // 3. Colossal Ancient Trees & Stepped Branches (parallax 0.3)
+    const treeX = Math.floor(-(camX * 0.3)) % 160;
+    for (let t = -160; t < VIRTUAL_WIDTH + 160; t += 80) {
+      const tx = t + treeX;
+      // Massive trunk
+      drawPixelRect(ctx, PALETTE.NIGHT_GREEN, tx, 0, 24, VIRTUAL_HEIGHT);
+      drawPixelRect(ctx, PALETTE.BLACK, tx + 4, 0, 16, VIRTUAL_HEIGHT);
+      // Large stepped branches
+      drawPixelRect(ctx, PALETTE.NIGHT_GREEN, tx - 20, 50, 22, 8);
+      drawPixelRect(ctx, PALETTE.NIGHT_GREEN, tx + 22, 80, 24, 9);
+      // Foliage clusters
+      drawPixelRect(ctx, PALETTE.DARK_PINE, tx - 30, 10, 85, 30);
     }
 
-    // Layer 4: Colossal Ancient Trees (parallax 0.3)
-    ctx.fillStyle = '#031a14';
-    const treeX = -(camX * 0.3) % 220;
-    for (let t = -220; t < VIRTUAL_WIDTH + 220; t += 110) {
-      const tx = Math.floor(t + treeX);
-      // Gigantic tree trunks
-      ctx.fillRect(tx, 0, 36, VIRTUAL_HEIGHT);
-      // Large branches
-      ctx.fillRect(tx - 30, 70, 32, 12);
-      ctx.fillRect(tx + 34, 110, 36, 14);
-      // Canopy crown
-      ctx.fillRect(tx - 45, 15, 130, 45);
-    }
+    // 4. Mossy Knight Statues & Pixel Waterfall (parallax 0.52)
+    const midX = Math.floor(-(camX * 0.52)) % 260;
+    for (let s = -260; s < VIRTUAL_WIDTH + 260; s += 180) {
+      const sx = s + midX;
+      // Statue of fallen knight
+      drawPixelRect(ctx, PALETTE.BLACK, sx, VIRTUAL_HEIGHT - 90, 16, 40);
+      drawPixelRect(ctx, PALETTE.BLACK, sx - 6, VIRTUAL_HEIGHT - 75, 28, 6);
+      drawPixelRect(ctx, PALETTE.BLACK, sx + 3, VIRTUAL_HEIGHT - 100, 10, 12);
 
-    // Layer 3: Mossy ancient statues & small waterfalls (parallax 0.52)
-    const midX = -(camX * 0.52) % 380;
-    for (let s = -380; s < VIRTUAL_WIDTH + 380; s += 260) {
-      const sx = Math.floor(s + midX);
-      // Broken statue of knight
-      ctx.fillStyle = '#042f24';
-      ctx.fillRect(sx, VIRTUAL_HEIGHT - 130, 24, 55);
-      ctx.fillRect(sx - 8, VIRTUAL_HEIGHT - 110, 40, 10);
-      ctx.fillRect(sx + 4, VIRTUAL_HEIGHT - 145, 16, 16);
-      // Small cascading waterfall in distance
-      ctx.fillStyle = '#34d399';
-      const waterY = (this.waterAnimTimer * 20) % 25;
-      ctx.fillRect(sx + 120, 130, 8, 90);
-      ctx.fillStyle = 'rgba(167, 243, 208, 0.6)';
-      ctx.fillRect(sx + 122, 130 + waterY, 4, 15);
+      // Pixel Waterfall Cascade
+      const waterStep = Math.floor(this.waterAnimTimer * 6) % 3;
+      drawPixelRect(ctx, PALETTE.MINT_GREEN, sx + 85, 90, 6, 60);
+      drawPixelRect(ctx, PALETTE.WHITE, sx + 86, 90 + waterStep * 16, 4, 10);
     }
   }
 
-  // ================= AREA 3: THE MOONLIT LAKE (Celestial Moon / Reflections) =================
+  // ================= AREA 3: THE MOONLIT LAKE =================
   private renderLakeBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // Layer 7: Nocturnal Deep Indigo Cosmos
-    const sky = ctx.createLinearGradient(0, 0, 0, VIRTUAL_HEIGHT * 0.65);
-    sky.addColorStop(0, '#030712'); // Pitch black-blue
-    sky.addColorStop(0.5, '#0f172a');
-    sky.addColorStop(1, '#1e293b');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    // 1. Nocturnal Deep Indigo Cosmos Sky
+    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.MIDNIGHT_BLUE, 0, 0, VIRTUAL_WIDTH, 55, 14);
+    drawDitheredSky(ctx, PALETTE.MIDNIGHT_BLUE, PALETTE.DARK_NAVY, 0, 55, VIRTUAL_WIDTH, 55, 14);
 
-    // Stars
-    ctx.fillStyle = '#e2e8f0';
-    for (let s = 0; s < 35; s++) {
-      const starX = ((s * 47) - camX * 0.01 + VIRTUAL_WIDTH * 2) % VIRTUAL_WIDTH;
-      const starY = (s * 29) % (VIRTUAL_HEIGHT * 0.5);
-      const twinkle = Math.sin(this.birdTimer * 3 + s) > 0.3 ? 1 : 0.4;
-      ctx.globalAlpha = twinkle;
-      ctx.fillRect(Math.floor(starX), Math.floor(starY), 1, 1);
+    // 2. 1-Pixel Twinkling Stars
+    for (let s = 0; s < 30; s++) {
+      const starX = Math.floor((s * 39 - camX * 0.01 + VIRTUAL_WIDTH * 2) % VIRTUAL_WIDTH);
+      const starY = Math.floor((s * 23) % 90);
+      const twinkle = Math.floor(this.birdTimer * 3 + s) % 2 === 0;
+      if (twinkle) {
+        drawPixelRect(ctx, PALETTE.WHITE, starX, starY, 1, 1);
+      }
     }
-    ctx.globalAlpha = 1.0;
 
-    // Enormous Celestial Moon
-    const moonX = VIRTUAL_WIDTH * 0.45 - (camX * 0.02);
-    const moonY = 55 - (camY * 0.02);
-    // Outer halo
-    ctx.fillStyle = 'rgba(219, 234, 254, 0.12)';
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, 48, 0, Math.PI * 2);
-    ctx.fill();
+    // 3. Giant Pixel Moon with Dithered Crater Details
+    const moonX = Math.floor(VIRTUAL_WIDTH * 0.48 - (camX * 0.02));
+    const moonY = Math.floor(45 - (camY * 0.02));
     // Moon disc
-    ctx.fillStyle = '#f8fafc';
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, 26, 0, Math.PI * 2);
-    ctx.fill();
-    // Moon craters
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(moonX - 10, moonY - 6, 7, 7);
-    ctx.fillRect(moonX + 4, moonY + 4, 9, 6);
-    ctx.fillRect(moonX - 5, moonY + 11, 6, 5);
+    drawPixelCircle(ctx, PALETTE.WHITE, moonX, moonY, 18);
+    // Craters
+    drawPixelRect(ctx, PALETTE.ICE_WHITE, moonX - 7, moonY - 4, 5, 5);
+    drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, moonX + 3, moonY + 3, 6, 4);
+    drawPixelRect(ctx, PALETTE.ICE_WHITE, moonX - 4, moonY + 8, 4, 4);
 
-    // Layer 5: Gigantic moonlit cliff silhouettes (parallax 0.12)
-    ctx.fillStyle = '#090d16';
-    const cliffX = -(camX * 0.12) % 320;
-    for (let c = -320; c < VIRTUAL_WIDTH + 320; c += 220) {
-      const cx = Math.floor(c + cliffX);
-      ctx.fillRect(cx, 80, 75, VIRTUAL_HEIGHT);
-      ctx.fillRect(cx + 65, 110, 95, VIRTUAL_HEIGHT);
+    // 4. Gigantic Moonlit Cliff Silhouettes (parallax 0.12)
+    const cliffX = Math.floor(-(camX * 0.12)) % 220;
+    for (let c = -220; c < VIRTUAL_WIDTH + 220; c += 150) {
+      const cx = c + cliffX;
+      drawPixelRect(ctx, PALETTE.BLACK, cx, 55, 50, VIRTUAL_HEIGHT);
+      drawPixelRect(ctx, PALETTE.BLACK, cx + 45, 75, 65, VIRTUAL_HEIGHT);
     }
 
-    // The Vast Lake Water Horizon (at y = VIRTUAL_HEIGHT * 0.62)
-    const waterY = Math.floor(VIRTUAL_HEIGHT * 0.62 - camY * 0.1);
-    const lakeGrad = ctx.createLinearGradient(0, waterY, 0, VIRTUAL_HEIGHT);
-    lakeGrad.addColorStop(0, '#0c1a30');
-    lakeGrad.addColorStop(0.4, '#081220');
-    lakeGrad.addColorStop(1, '#030712');
-    ctx.fillStyle = lakeGrad;
-    ctx.fillRect(0, waterY, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - waterY);
+    // 5. The Vast Lake Water Horizon (at y = 110)
+    const waterY = Math.floor(110 - camY * 0.08);
+    drawDitheredSky(ctx, PALETTE.DARK_NAVY, PALETTE.MIDNIGHT_BLUE, 0, waterY, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - waterY, 16);
 
-    // Dynamic Shimmering Moon Reflection across the lake water!
+    // 6. Dynamic Shimmering 8-Bit Moon Reflection across water!
     const reflX = moonX;
-    ctx.fillStyle = 'rgba(224, 242, 254, 0.35)';
-    for (let y = waterY; y < VIRTUAL_HEIGHT; y += 4) {
+    for (let y = waterY; y < VIRTUAL_HEIGHT; y += 3) {
       const dist = y - waterY;
-      const spread = dist * 0.35;
-      const ripple = Math.sin(this.waterAnimTimer + y * 0.2) * 5;
-      const rw = Math.max(4, 18 + spread + ripple);
-      ctx.fillRect(Math.floor(reflX - rw / 2 + ripple), y, Math.floor(rw), 2);
+      const spread = Math.floor(dist * 0.3);
+      const ripple = Math.floor(Math.sin(this.waterAnimTimer + y * 0.3) * 4);
+      const rw = Math.max(4, 12 + spread + ripple);
+      const reflColor = (y % 6 === 0) ? PALETTE.ICE_WHITE : PALETTE.CYAN_HIGHLIGHT;
+      drawPixelRect(ctx, reflColor, Math.floor(reflX - rw / 2 + ripple), y, rw, 1);
     }
 
-    // Layer 4: Ruined drowned watchtowers across the lake (parallax 0.28)
-    ctx.fillStyle = '#060a12';
-    const towerX = Math.floor(340 - (camX * 0.28));
-    ctx.fillRect(towerX, waterY - 55, 34, 60);
-    ctx.fillRect(towerX - 6, waterY - 52, 46, 8);
-    // Tower reflection in water
-    ctx.fillStyle = 'rgba(6, 10, 18, 0.4)';
-    ctx.fillRect(towerX, waterY + 2, 34, 35);
+    // 7. Drowned Watchtowers in the Lake (parallax 0.28)
+    const towerX = Math.floor(230 - (camX * 0.28));
+    drawPixelRect(ctx, PALETTE.BLACK, towerX, waterY - 38, 24, 42);
+    drawPixelRect(ctx, PALETTE.BLACK, towerX - 4, waterY - 36, 32, 6);
+    // Water reflection of tower
+    drawPixelRect(ctx, PALETTE.BLACK, towerX, waterY + 2, 24, 25);
   }
 
-  // ================= AREA 4: THE FALLEN KINGDOM (Capital Ruins / Rain / Fire) =================
+  // ================= AREA 4: THE FALLEN KINGDOM =================
   private renderCapitalBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // Layer 7: Dark Storm Sky with Periodic Lightning Flash
-    const sky = ctx.createLinearGradient(0, 0, 0, VIRTUAL_HEIGHT);
-    if (this.lightningFlash > 0) {
-      sky.addColorStop(0, `rgba(224, 231, 255, ${this.lightningFlash * 2.5})`);
-      sky.addColorStop(1, `rgba(147, 197, 253, ${this.lightningFlash * 1.5})`);
-    } else {
-      sky.addColorStop(0, '#110c1d');
-      sky.addColorStop(0.6, '#1f1635');
-      sky.addColorStop(1, '#2e1065');
+    // 1. Dark Storm Sky with Periodic Full-Screen Palette Flash
+    if (this.lightningFlash) {
+      // Full screen white flash
+      drawPixelRect(ctx, PALETTE.WHITE, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+      return;
     }
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
-    // Layer 6: Rolling ominous storm clouds
-    ctx.fillStyle = 'rgba(15, 10, 25, 0.65)';
-    const cloudShift = (this.cloudOffset * 0.6 - camX * 0.08) % (VIRTUAL_WIDTH + 140);
-    for (let c = -140; c < VIRTUAL_WIDTH + 160; c += 120) {
+    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.VOID_PURPLE, 0, 0, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DARK_VIOLET, 0, 60, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.DARK_VIOLET, PALETTE.PURPLE, 0, 120, VIRTUAL_WIDTH, 60, 16);
+
+    // 2. Rolling Ominous Storm Clouds
+    const cloudShift = Math.floor(this.cloudOffset * 0.5 - camX * 0.08) % (VIRTUAL_WIDTH + 100);
+    for (let c = -100; c < VIRTUAL_WIDTH + 120; c += 90) {
       const cx = c + cloudShift;
-      ctx.fillRect(cx, 20, 80, 32);
-      ctx.fillRect(cx + 25, 10, 50, 24);
+      drawPixelRect(ctx, PALETTE.VOID_PURPLE, cx, 15, 60, 22);
+      drawPixelRect(ctx, PALETTE.VOID_PURPLE, cx + 18, 8, 38, 16);
     }
 
-    // Layer 5: Colossal Cathedral Spires & Capital Ramparts (parallax 0.15)
-    ctx.fillStyle = '#181126';
-    const spireX = -(camX * 0.15) % 280;
-    for (let s = -280; s < VIRTUAL_WIDTH + 280; s += 140) {
-      const sx = Math.floor(s + spireX);
-      // High gothic pointed arches
-      ctx.beginPath();
-      ctx.moveTo(sx, VIRTUAL_HEIGHT);
-      ctx.lineTo(sx + 30, 45);
-      ctx.lineTo(sx + 60, VIRTUAL_HEIGHT);
-      ctx.fill();
+    // 3. Colossal Gothic Cathedral Spires (parallax 0.15)
+    const spireX = Math.floor(-(camX * 0.15)) % 200;
+    for (let s = -200; s < VIRTUAL_WIDTH + 200; s += 100) {
+      const sx = s + spireX;
+      // High pointed gothic spire
+      for (let h = 0; h < 70; h += 3) {
+        const sw = Math.floor(h * 0.6);
+        drawPixelRect(ctx, PALETTE.VOID_PURPLE, sx + 20 - Math.floor(sw / 2), 30 + h, sw, 3);
+      }
+      drawPixelRect(ctx, PALETTE.VOID_PURPLE, sx + 5, 100, 30, VIRTUAL_HEIGHT - 100);
     }
 
-    // Layer 4: Burning Watchtowers & Shattered Colonnades (parallax 0.32)
-    ctx.fillStyle = '#120b1c';
-    const ruinsX = -(camX * 0.32) % 360;
-    for (let r = -360; r < VIRTUAL_WIDTH + 360; r += 180) {
-      const rx = Math.floor(r + ruinsX);
-      ctx.fillRect(rx, 90, 48, VIRTUAL_HEIGHT);
+    // 4. Burning Watchtowers & Flickering Fire Pixels (parallax 0.32)
+    const ruinsX = Math.floor(-(camX * 0.32)) % 260;
+    for (let r = -260; r < VIRTUAL_WIDTH + 260; r += 130) {
+      const rx = r + ruinsX;
+      drawPixelRect(ctx, PALETTE.BLACK, rx, 65, 34, VIRTUAL_HEIGHT);
       // Broken archways
-      ctx.fillRect(rx + 48, 130, 60, 16);
-      // Burning fire glow on the ruined parapet
-      ctx.fillStyle = '#f97316';
-      const flameSway = Math.sin(this.birdTimer * 12 + rx) * 3;
-      ctx.fillRect(rx + 14 + flameSway, 78, 12, 14);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(rx + 17 + flameSway, 82, 6, 8);
-      ctx.fillStyle = '#120b1c';
+      drawPixelRect(ctx, PALETTE.BLACK, rx + 34, 95, 42, 12);
+
+      // Flickering 8-bit Fire Pixels on parapet
+      const flameSway = Math.floor(Math.sin(this.birdTimer * 10 + rx) * 2);
+      drawPixelRect(ctx, PALETTE.BRIGHT_RED, rx + 10 + flameSway, 55, 9, 11);
+      drawPixelRect(ctx, PALETTE.GOLD, rx + 12 + flameSway, 58, 5, 6);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 14 + flameSway, 60, 2, 3);
     }
 
-    // Layer 3: Torn royal flags fluttering in storm (parallax 0.55)
-    ctx.fillStyle = '#831843'; // Royal burgundy torn flag
-    const flagX = Math.floor(250 - (camX * 0.55));
-    ctx.fillRect(flagX, 160, 4, 60); // Flag pole
-    const wave = Math.sin(this.birdTimer * 8) * 6;
-    ctx.fillRect(flagX + 4, 165, 34 + wave, 18);
-    ctx.fillRect(flagX + 4, 183, 26 + wave, 12);
+    // 5. Torn Royal Banners Fluttering (parallax 0.55)
+    const flagX = Math.floor(180 - (camX * 0.55));
+    drawPixelRect(ctx, PALETTE.BLACK, flagX, 110, 3, 45); // Pole
+    const wave = Math.floor(Math.sin(this.birdTimer * 8) * 4);
+    drawPixelRect(ctx, PALETTE.DEEP_MAROON, flagX + 3, 114, 24 + wave, 12);
+    drawPixelRect(ctx, PALETTE.DEEP_MAROON, flagX + 3, 126, 18 + wave, 8);
   }
 
-  // ================= AREA 5: THE TOWER OF DAWN (Above Clouds / Sacred Sunrise) =================
+  // ================= AREA 5: THE TOWER OF DAWN =================
   private renderTowerBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
-    // Layer 7: Radiant Sunrise Horizon transitioning into golden dawn
-    const dawn = ctx.createLinearGradient(0, 0, 0, VIRTUAL_HEIGHT);
-    dawn.addColorStop(0, '#311042');   // Cosmic purple
-    dawn.addColorStop(0.35, '#581c87'); // Royal amethyst
-    dawn.addColorStop(0.65, '#b45309'); // Radiant gold amber
-    dawn.addColorStop(0.85, '#f59e0b'); // Golden sunlight
-    dawn.addColorStop(1.0, '#fef08a');  // Incandescent dawn rays
-    ctx.fillStyle = dawn;
-    ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    // 1. Radiant Gold-to-Violet Dawn Dithered Sky
+    drawDitheredSky(ctx, PALETTE.DARK_VIOLET, PALETTE.PURPLE, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.PURPLE, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
 
-    // Radiant Rising Sun at Summit
-    const sunX = VIRTUAL_WIDTH * 0.65 - (camX * 0.02);
-    const sunY = 90 - (camY * 0.02);
-    ctx.fillStyle = '#fffbeb';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 32, 0, Math.PI * 2);
-    ctx.fill();
-    // Divine god-rays bursting outward
-    ctx.fillStyle = 'rgba(254, 240, 138, 0.12)';
-    for (let a = 0; a < 8; a++) {
-      const angle = a * (Math.PI / 4) + this.birdTimer * 0.05;
-      ctx.beginPath();
-      ctx.moveTo(sunX, sunY);
-      ctx.lineTo(sunX + Math.cos(angle - 0.18) * 350, sunY + Math.sin(angle - 0.18) * 350);
-      ctx.lineTo(sunX + Math.cos(angle + 0.18) * 350, sunY + Math.sin(angle + 0.18) * 350);
-      ctx.fill();
+    // 2. Radiant Rising Sun at Summit
+    const sunX = Math.floor(VIRTUAL_WIDTH * 0.65 - (camX * 0.02));
+    const sunY = Math.floor(65 - (camY * 0.02));
+    drawPixelCircle(ctx, PALETTE.WHITE, sunX, sunY, 22);
+    drawPixelCircle(ctx, PALETTE.SUN_YELLOW, sunX, sunY, 14);
+
+    // 8-bit Stepped God Rays
+    for (let r = 0; r < 4; r++) {
+      const rx = sunX + Math.floor(Math.cos(r * 1.5 + this.birdTimer * 0.1) * 60);
+      const ry = sunY + Math.floor(Math.sin(r * 1.5 + this.birdTimer * 0.1) * 60);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx, ry, 6, 2);
     }
 
-    // Layer 6: Endless Sea of Clouds rolling below the tower
-    const seaY = Math.floor(VIRTUAL_HEIGHT * 0.58 - camY * 0.05);
-    ctx.fillStyle = '#fef3c7';
-    for (let c = -100; c < VIRTUAL_WIDTH + 100; c += 40) {
-      const cx = c + ((this.cloudOffset * 0.2 - camX * 0.04) % 40);
-      const bob = Math.sin(this.birdTimer * 1.5 + c * 0.1) * 6;
-      ctx.beginPath();
-      ctx.arc(cx, seaY + bob, 26, 0, Math.PI * 2);
-      ctx.fill();
+    // 3. Endless Sea of Blocky 8-Bit Clouds Rolling Below
+    const seaY = Math.floor(125 - camY * 0.05);
+    for (let c = -60; c < VIRTUAL_WIDTH + 60; c += 30) {
+      const cx = c + (Math.floor(this.cloudOffset * 0.2 - camX * 0.04) % 30);
+      const bob = Math.floor(Math.sin(this.birdTimer + c) * 3);
+      drawPixelCircle(ctx, PALETTE.WHITE, cx, seaY + bob, 16);
+      drawPixelCircle(ctx, PALETTE.PALE_GOLD, cx, seaY + 8 + bob, 14);
     }
-    // Deep cloud underlayer
-    ctx.fillStyle = '#fcd34d';
-    ctx.fillRect(0, seaY + 12, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - (seaY + 12));
+    drawPixelRect(ctx, PALETTE.GOLD, 0, seaY + 12, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - (seaY + 12));
 
-    // Layer 5: Floating shattered crystal monoliths (parallax 0.15)
-    ctx.fillStyle = '#d97706';
-    for (let i = 0; i < 5; i++) {
-      const mx = Math.floor((i * 110 - camX * 0.15 + VIRTUAL_WIDTH * 2) % (VIRTUAL_WIDTH + 100));
-      const my = 80 + i * 22 + Math.sin(this.birdTimer + i) * 6;
-      ctx.beginPath();
-      ctx.moveTo(mx, my);
-      ctx.lineTo(mx + 12, my - 24);
-      ctx.lineTo(mx + 24, my);
-      ctx.lineTo(mx + 12, my + 14);
-      ctx.fill();
+    // 4. Floating Shattered Crystal Monoliths (parallax 0.15)
+    for (let i = 0; i < 4; i++) {
+      const mx = Math.floor((i * 85 - camX * 0.15 + VIRTUAL_WIDTH * 2) % (VIRTUAL_WIDTH + 80));
+      const my = Math.floor(60 + i * 18 + Math.sin(this.birdTimer + i) * 4);
+      drawPixelCrystal(ctx, mx, my, 10, 16, PALETTE.PALE_GOLD, PALETTE.WHITE, PALETTE.AMBER_DARK);
     }
 
-    // Layer 4: The Gigantic Ancient Tower of Dawn exterior spire piercing the heavens (parallax 0.28)
+    // 5. The Gigantic Ancient Tower of Dawn Spire (parallax 0.28)
     const towerX = Math.floor(VIRTUAL_WIDTH * 0.42 - (camX * 0.28));
-    ctx.fillStyle = '#78350f';
-    ctx.fillRect(towerX, 0, 75, VIRTUAL_HEIGHT);
-    // Flying buttresses & high arched windows
-    ctx.fillRect(towerX - 45, 120, 48, 14);
-    ctx.fillRect(towerX + 72, 160, 48, 14);
-    // Glowing stained glass lancet windows
-    ctx.fillStyle = '#fef08a';
-    ctx.fillRect(towerX + 24, 70, 12, 34);
-    ctx.fillRect(towerX + 42, 70, 12, 34);
-    ctx.fillRect(towerX + 33, 130, 14, 40);
+    drawPixelRect(ctx, PALETTE.DEEP_BROWN, towerX, 0, 55, VIRTUAL_HEIGHT);
+    drawPixelRect(ctx, PALETTE.RUST, towerX + 4, 0, 47, VIRTUAL_HEIGHT);
+    // Glowing Stained Glass Lancet Windows
+    drawPixelRect(ctx, PALETTE.SUN_YELLOW, towerX + 16, 50, 8, 24);
+    drawPixelRect(ctx, PALETTE.WHITE, towerX + 18, 52, 4, 20);
+    drawPixelRect(ctx, PALETTE.SUN_YELLOW, towerX + 31, 50, 8, 24);
+    drawPixelRect(ctx, PALETTE.WHITE, towerX + 33, 52, 4, 20);
+  }
+
+  // ================= TITLE SCREEN VISTA (Section 2 & 26) =================
+  public renderTitleScreenVista(ctx: CanvasRenderingContext2D, time: number) {
+    // Dramatic composition:
+    // Dithered sunset sky, setting sun, castle on distant mountain horizon,
+    // and Sir Cael standing as a tiny 8-bit knight on a rocky cliff edge in the foreground!
+
+    // 1. Sky
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DEEP_MAROON, 0, 0, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.DEEP_MAROON, PALETTE.AMBER_DARK, 0, 45, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.AMBER_DARK, PALETTE.GOLD, 0, 90, VIRTUAL_WIDTH, 45, 14);
+    drawDitheredSky(ctx, PALETTE.GOLD, PALETTE.SUN_YELLOW, 0, 135, VIRTUAL_WIDTH, 45, 14);
+
+    // 2. Giant Setting Sun slowly descending behind mountains
+    const sunY = Math.floor(70 + Math.sin(time * 0.2) * 5);
+    drawPixelCircle(ctx, PALETTE.SUN_YELLOW, 225, sunY, 20);
+    drawPixelCircle(ctx, PALETTE.WHITE, 225, sunY, 10);
+
+    // 3. Clouds
+    const cloudShift = Math.floor(time * 3) % (VIRTUAL_WIDTH + 80);
+    drawPixelRect(ctx, PALETTE.DEEP_MAROON, 40 + cloudShift, 25, 60, 8);
+    drawPixelRect(ctx, PALETTE.DEEP_MAROON, 50 + cloudShift, 20, 40, 7);
+
+    // 4. Distant Mountains
+    for (let s = 0; s < 70; s += 4) {
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, 220 - s, 75 + s, s * 2, 4);
+    }
+    for (let s = 0; s < 55; s += 4) {
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, 130 - s, 90 + s, s * 2, 4);
+    }
+
+    // 5. Distant Ruined Castle Spires on Horizon
+    const castleX = 185;
+    const castleY = 82;
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX, castleY + 12, 50, 45);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 8, castleY, 10, 15);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 24, castleY - 6, 8, 20);
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, castleX + 38, castleY + 2, 10, 14);
+
+    // 6. Flying Birds
+    const birdX = Math.floor((time * 10) % (VIRTUAL_WIDTH + 40)) - 20;
+    drawPixelRect(ctx, PALETTE.BLACK, birdX, 35, 2, 1);
+    drawPixelRect(ctx, PALETTE.BLACK, birdX + 7, 39, 2, 1);
+    drawPixelRect(ctx, PALETTE.BLACK, birdX + 14, 34, 2, 1);
+
+    // 7. High Rocky Cliff Promontory (Foreground Left)
+    drawPixelRect(ctx, PALETTE.BLACK, 0, 115, 95, 65);
+    drawPixelRect(ctx, PALETTE.BLACK, 0, 125, 115, 55);
+    drawPixelRect(ctx, PALETTE.BLACK, 0, 138, 140, 42);
+    // Grass top on cliff
+    drawPixelRect(ctx, PALETTE.MOSS_GREEN, 0, 115, 95, 2);
+
+    // 8. Tiny Sir Cael standing on the cliff edge looking toward the distant castle
+    const knightX = 72;
+    const knightY = 95;
+    // Boots & legs
+    drawPixelRect(ctx, PALETTE.MID_GRAY, knightX + 2, knightY + 14, 3, 6);
+    drawPixelRect(ctx, PALETTE.MID_GRAY, knightX + 7, knightY + 14, 3, 6);
+    // Torso & armor
+    drawPixelRect(ctx, PALETTE.DARK_GRAY, knightX + 2, knightY + 6, 8, 8);
+    drawPixelRect(ctx, PALETTE.GOLD, knightX + 5, knightY + 8, 2, 2);
+    // Helmet & visor
+    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, knightX + 3, knightY, 7, 6);
+    drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, knightX + 7, knightY + 2, 3, 1);
+    // Crimson cape fluttering in wind (3-frame animation)
+    const capeFrame = Math.floor(time * 4) % 3;
+    const capeW = capeFrame === 0 ? 5 : capeFrame === 1 ? 7 : 6;
+    drawPixelRect(ctx, PALETTE.CRIMSON, knightX - capeW, knightY + 6, capeW, 9);
+    // Sheathed sword
+    drawPixelRect(ctx, PALETTE.AMBER, knightX + 1, knightY + 7, 2, 3);
+    drawPixelRect(ctx, PALETTE.BRIGHT_GRAY, knightX - 1, knightY + 10, 2, 8);
   }
 }
 

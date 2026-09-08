@@ -1,6 +1,5 @@
 import React from 'react';
 import { MemoryShard } from '../types';
-import { Gem, Sparkles, X } from 'lucide-react';
 
 interface MemoryShardModalProps {
   shard: MemoryShard;
@@ -9,38 +8,35 @@ interface MemoryShardModalProps {
 
 export const MemoryShardModal: React.FC<MemoryShardModalProps> = ({ shard, onClose }) => {
   return (
-    <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-40 select-none animate-fade-in">
-      <div className="w-full max-w-lg bg-slate-950 border-2 border-sky-500/80 p-6 rounded shadow-2xl relative text-center">
-        {/* Shimmering Top Crystal */}
-        <div className="mx-auto w-14 h-14 rounded-full bg-sky-950/80 border-2 border-sky-400 flex items-center justify-center text-sky-300 mb-4 shadow-[0_0_20px_rgba(56,189,248,0.4)] animate-pulse">
-          <Gem className="w-7 h-7" />
+    <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-40 select-none font-mono">
+      <div className="w-full max-w-lg bg-[#0b0714] border-4 border-[#58a8f8] p-5 shadow-[6px_6px_0px_#000000] text-center">
+        {/* 8-bit Shard Icon */}
+        <div className="mx-auto w-6 h-6 rotate-45 bg-[#88d8f8] border-2 border-black mb-3 shadow-[0_0_8px_#58a8f8]" />
+
+        <div className="text-[#58a8f8] text-[10px] font-bold tracking-widest uppercase mb-1">
+          MEMORY SHARD RECOVERED
         </div>
 
-        <div className="flex items-center justify-center gap-1 text-sky-400 text-xs font-retro tracking-wider mb-1">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>MEMORY SHARD RESTORED</span>
-        </div>
-
-        <h2 className="font-cinzel text-xl font-bold text-amber-200 tracking-wider mb-2">
+        <h2 className="text-base sm:text-lg font-bold text-[#f8f870] tracking-wider uppercase mb-1">
           {shard.title}
         </h2>
 
-        <div className="text-[11px] font-retro text-slate-400 mb-4 pb-2 border-b border-slate-800">
+        <div className="text-[9px] text-[#909090] mb-3 pb-2 border-b border-[#303030] uppercase">
           {shard.areaName} • {shard.timestampHint}
         </div>
 
-        {/* Narrative Memory Excerpt */}
-        <div className="bg-slate-900/90 border border-slate-800 p-4 rounded text-left mb-5">
-          <p className="font-cinzel italic text-slate-200 text-sm leading-relaxed">
-            “{shard.memoryText}”
+        {/* Narrative Memory Excerpt in 8-bit box */}
+        <div className="bg-[#181818] border-2 border-[#585858] p-3 text-left mb-4">
+          <p className="text-[#f8f8f8] text-xs leading-relaxed tracking-wide">
+            "{shard.memoryText}"
           </p>
         </div>
 
         <button
           onClick={onClose}
-          className="w-full py-2.5 bg-linear-to-r from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white font-retro text-xs rounded border border-sky-400 transition cursor-pointer shadow-lg"
+          className="w-full py-2 bg-[#58a8f8] hover:bg-[#88d8f8] text-black font-extrabold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#000000] cursor-pointer"
         >
-          Absorb Memory [E]
+          ABSORB MEMORY [E]
         </button>
       </div>
     </div>
@@ -54,24 +50,17 @@ interface LandmarkModalProps {
 
 export const LandmarkModal: React.FC<LandmarkModalProps> = ({ text, onClose }) => {
   return (
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-30 select-none animate-fade-in">
-      <div className="w-full max-w-md bg-slate-950 border border-amber-500/60 p-5 rounded shadow-2xl relative text-center">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-slate-400 hover:text-white transition cursor-pointer"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <p className="font-cinzel text-slate-200 text-sm sm:text-base leading-relaxed my-3 px-2">
+    <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4 z-40 select-none font-mono">
+      <div className="w-full max-w-md bg-[#0b0714] border-4 border-[#f8a020] p-4 shadow-[4px_4px_0px_#000000] text-center">
+        <p className="text-[#f8f870] text-xs sm:text-sm leading-relaxed my-3 px-2 tracking-wide uppercase">
           {text}
         </p>
 
         <button
           onClick={onClose}
-          className="mt-2 px-5 py-1.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/50 rounded font-retro text-xs transition cursor-pointer"
+          className="mt-2 px-5 py-1.5 bg-[#f8a020] hover:bg-[#f8f870] text-black font-bold text-xs uppercase shadow-[2px_2px_0px_#000000] cursor-pointer"
         >
-          Continue [E]
+          CONTINUE [E]
         </button>
       </div>
     </div>

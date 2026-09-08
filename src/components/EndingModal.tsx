@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { EndingType } from '../types';
-import { Sun, Shield, Sparkles, Sword, RotateCcw } from 'lucide-react';
 
 interface EndingModalProps {
   isChoicePhase: boolean;
@@ -25,58 +24,57 @@ export const EndingModal: React.FC<EndingModalProps> = ({
 
   if (isChoicePhase) {
     return (
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 select-none animate-fade-in">
-        <div className="w-full max-w-2xl bg-slate-950 border-2 border-amber-500/80 p-6 sm:p-8 rounded shadow-2xl text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-950 border border-amber-400 flex items-center justify-center text-amber-300 shadow-[0_0_25px_rgba(251,191,36,0.4)]">
-            <Sun className="w-8 h-8 animate-spin-slow" />
-          </div>
+      <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50 select-none font-mono">
+        <div className="w-full max-w-xl bg-[#0b0714] border-4 border-[#f8a020] p-5 sm:p-6 shadow-[6px_6px_0px_#000000] text-center">
+          {/* 8-bit Crystal Icon */}
+          <div className="w-6 h-6 mx-auto mb-2 rotate-45 bg-[#f8f870] border-2 border-black shadow-[0_0_8px_#f8a020]" />
 
-          <span className="font-retro text-xs text-amber-400 tracking-widest uppercase">The Summit of Dawn</span>
-          <h1 className="font-cinzel text-2xl sm:text-3xl font-bold text-slate-100 tracking-wider mt-1 mb-3">
-            The Final Choice
+          <div className="text-[#f8a020] text-[10px] font-bold tracking-widest uppercase">
+            SUMMIT OF THE TOWER OF DAWN
+          </div>
+          <h1 className="text-lg sm:text-xl font-extrabold text-[#f8f8f8] tracking-widest uppercase mt-1 mb-3">
+            THE FINAL CHOICE
           </h1>
 
-          <p className="font-cinzel text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl mx-auto mb-6">
-            The Dying King has fallen. Before you rests the shattered core of the Heart of Dawn.
-            Its golden light cannot be repaired—it can only be transferred into a living soul, or broken forever.
+          <p className="text-[#c0c0c0] text-xs leading-relaxed max-w-lg mx-auto mb-5">
+            THE DYING KING HAS FALLEN. BEFORE YOU RESTS THE SHATTERED HEART OF DAWN.
+            ITS LIGHT CANNOT BE REPAIRED—IT CAN ONLY BE TRANSFERRED INTO A LIVING SOUL, OR SHATTERED FOREVER.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-            {/* Ending 1 Option: Sacrifice */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            {/* Option 1: Sacrifice */}
             <button
               onClick={() => onSelectEnding(EndingType.SACRIFICE)}
-              className="group p-4 bg-slate-900/90 hover:bg-amber-950/40 border border-amber-500/40 hover:border-amber-400 rounded transition cursor-pointer flex flex-col justify-between"
+              className="p-3 bg-[#181818] hover:bg-[#303030] border-2 border-[#f8a020] transition cursor-pointer flex flex-col justify-between shadow-[2px_2px_0px_#000000]"
             >
               <div>
-                <div className="flex items-center gap-2 text-amber-400 font-cinzel font-bold text-base mb-1">
-                  <Sparkles className="w-5 h-5 text-amber-300" />
-                  <span>ENDING I: SACRIFICE</span>
+                <div className="text-[#f8a020] font-bold text-xs uppercase mb-1">
+                  ENDING I: SACRIFICE
                 </div>
-                <p className="font-cinzel text-xs text-slate-300 leading-relaxed">
-                  Surrender Sir Cael’s life to transfer the remaining light into his soul, restoring the golden sun over Eldoria.
+                <p className="text-[10px] text-[#c0c0c0] leading-relaxed">
+                  SURRENDER SIR CAEL'S LIFE TO BECOME THE NEW SUN AND RESTORE ELDORIA'S DAWN.
                 </p>
               </div>
-              <div className="mt-4 text-[10px] font-retro text-amber-400/80 group-hover:text-amber-300">
-                Fulfill the Ancient Oath →
+              <div className="mt-3 text-[9px] text-[#f8f870] font-bold">
+                FULFILL THE VOW ▶
               </div>
             </button>
 
-            {/* Ending 2 Option: The New Dawn */}
+            {/* Option 2: The New Dawn */}
             <button
               onClick={() => onSelectEnding(EndingType.NEW_DAWN)}
-              className="group p-4 bg-slate-900/90 hover:bg-sky-950/40 border border-sky-500/40 hover:border-sky-400 rounded transition cursor-pointer flex flex-col justify-between"
+              className="p-3 bg-[#181818] hover:bg-[#303030] border-2 border-[#58a8f8] transition cursor-pointer flex flex-col justify-between shadow-[2px_2px_0px_#000000]"
             >
               <div>
-                <div className="flex items-center gap-2 text-sky-400 font-cinzel font-bold text-base mb-1">
-                  <Sword className="w-5 h-5 text-sky-300" />
-                  <span>ENDING II: THE NEW DAWN</span>
+                <div className="text-[#58a8f8] font-bold text-xs uppercase mb-1">
+                  ENDING II: NEW DAWN
                 </div>
-                <p className="font-cinzel text-xs text-slate-300 leading-relaxed">
-                  Shatter the corrupted crystal forever. Refuse martyrdom and allow the kingdom to rebuild through mortal hands.
+                <p className="text-[10px] text-[#c0c0c0] leading-relaxed">
+                  SHATTER THE CORRUPTED CORE. BREAK THE CYCLE OF SACRIFICE AND WALK FORWARD AS MORTAL.
                 </p>
               </div>
-              <div className="mt-4 text-[10px] font-retro text-sky-400/80 group-hover:text-sky-300">
-                Break the Cycle →
+              <div className="mt-3 text-[9px] text-[#88d8f8] font-bold">
+                BREAK THE CYCLE ▶
               </div>
             </button>
           </div>
@@ -85,44 +83,43 @@ export const EndingModal: React.FC<EndingModalProps> = ({
     );
   }
 
-  // Epilogue Sequence & Credits
+  // Epilogue Sequence
   return (
-    <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 select-none animate-fade-in">
-      <div className="w-full max-w-xl bg-slate-950 border border-amber-500/60 p-6 sm:p-8 rounded shadow-2xl text-center">
-        <div className="text-xs font-retro text-amber-400 tracking-widest uppercase mb-2">
-          {chosenEnding === EndingType.SACRIFICE ? 'Ending I — The Eternal Flame' : 'Ending II — The New Dawn'}
+    <div className="absolute inset-0 bg-black/85 flex items-center justify-center p-4 z-50 select-none font-mono">
+      <div className="w-full max-w-xl bg-[#0b0714] border-4 border-[#f8a020] p-5 sm:p-6 shadow-[6px_6px_0px_#000000] text-center">
+        <div className="text-[10px] text-[#f8a020] font-bold tracking-widest uppercase mb-1">
+          {chosenEnding === EndingType.SACRIFICE ? 'ENDING I: THE ETERNAL SACRIFICE' : 'ENDING II: THE HONEST SUNRISE'}
         </div>
 
-        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-slate-100 tracking-wider mb-6">
-          Knight of the Last Dawn
+        <h2 className="text-base sm:text-lg font-bold text-[#f8f8f8] tracking-widest uppercase mb-4">
+          KNIGHT OF THE LAST DAWN
         </h2>
 
-        {/* Epilogue Text Card */}
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded text-left min-h-28 mb-6">
-          <p className="font-cinzel text-slate-200 text-sm sm:text-base leading-relaxed">
-            {epilogueLines[currentStep]}
+        {/* 8-bit Epilogue Box */}
+        <div className="bg-[#181818] border-2 border-[#585858] p-4 text-left min-h-24 mb-4">
+          <p className="text-[#f8f8f8] text-xs sm:text-sm leading-relaxed tracking-wide">
+            "{epilogueLines[currentStep]}"
           </p>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="font-retro text-[10px] text-slate-500">
-            {currentStep + 1} of {epilogueLines.length}
+          <span className="text-[10px] text-[#909090]">
+            {currentStep + 1}/{epilogueLines.length}
           </span>
 
           {!isFinalStep ? (
             <button
               onClick={onNextStep}
-              className="px-5 py-2 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/60 rounded font-retro text-xs transition cursor-pointer"
+              className="px-4 py-1.5 bg-[#f8a020] hover:bg-[#f8f870] text-black font-bold text-xs uppercase shadow-[2px_2px_0px_#000000] cursor-pointer"
             >
-              Next →
+              NEXT [SPACE] ▶
             </button>
           ) : (
             <button
               onClick={onRestartGame}
-              className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-retro font-bold text-xs rounded border border-amber-400 shadow-lg transition cursor-pointer"
+              className="px-4 py-2 bg-[#f8a020] hover:bg-[#f8f870] text-black font-extrabold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#000000] cursor-pointer"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Return to Title</span>
+              RETURN TO TITLE
             </button>
           )}
         </div>

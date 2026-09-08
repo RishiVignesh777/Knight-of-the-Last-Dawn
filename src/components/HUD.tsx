@@ -1,7 +1,6 @@
 import React from 'react';
 import { PlayerStats, AreaId, Enemy } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
-import { Heart, Zap, Sparkles, MapPin, Gem } from 'lucide-react';
 
 interface HUDProps {
   player: PlayerStats;
@@ -11,106 +10,149 @@ interface HUDProps {
 
 export const HUD: React.FC<HUDProps> = ({ player, currentAreaId, bossEnemy }) => {
   const currentArea = WORLD_AREAS[currentAreaId];
-  const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
-  const staminaPercent = Math.max(0, Math.min(100, (player.stamina / player.maxStamina) * 100));
-  const dawnPercent = Math.max(0, Math.min(100, (player.dawnEnergy / player.maxDawnEnergy) * 100));
+
+  // Segmented 8-bit Health: 5 hearts total (each represents 20 HP of 100 max HP)
+  const maxHearts = 5;
+  const hpPerHeart = player.maxHp / maxHearts;
+  const currentHp = Math.max(0, player.hp);
+
+  // Stepped Stamina: 8 segments
+  const totalStaminaSegments = 8;
+  const staminaSegments = Math.ceil((player.stamina / player.maxStamina) * totalStaminaSegments);
+
+  // Dawn Energy: 4 sacred crystal orbs
+  const totalDawnOrbs = 4;
+  const dawnOrbs = Math.ceil((player.dawnEnergy / player.maxDawnEnergy) * totalDawnOrbs);
 
   const totalShards = 5;
   const collectedCount = player.memoryShards.length;
 
   return (
-    <div id="game-hud" className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between select-none">
-      {/* Top Bar */}
+    <div id="game-hud" className="absolute inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none font-mono">
+      {/* Top Status Panel */}
       <div className="flex items-start justify-between">
-        {/* Vitality & Energy Bars */}
-        <div className="flex flex-col gap-2">
-          {/* Health Bar */}
-          <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-700/80 px-2.5 py-1.5 rounded shadow-lg backdrop-blur-xs">
-            <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" />
-            <div className="w-36 sm:w-48 h-3 bg-slate-900 rounded-xs overflow-hidden border border-slate-700 relative">
-              <div
-                className="h-full bg-linear-to-r from-red-700 via-red-600 to-rose-500 transition-all duration-150"
-                style={{ width: `${hpPercent}%` }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center font-retro text-[9px] text-white tracking-wider">
-                {Math.round(player.hp)} / {player.maxHp}
-              </span>
+        {/* Vitality Panel (Classic 8-Bit NES Frame) */}
+        <div className="bg-[#0b0714] border-2 border-[#f8f8f8] p-2 flex flex-col gap-2 shadow-[2px_2px_0px_#000000]">
+          {/* Hearts Row */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#f83800] text-xs font-bold tracking-wider">HP</span>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: maxHearts }).map((_, i) => {
+                const heartHp = currentHp - (i * hpPerHeart);
+                const isFull = heartHp >= hpPerHeart;
+                const isHalf = heartHp > 0 && heartHp < hpPerHeart;
+
+                return (
+                  <div key={i} className="relative w-4 h-4 flex items-center justify-center">
+                    {isFull ? (
+                      // Full 8-bit Heart
+                      <svg width="14" height="14" viewBox="0 0 7 7" className="shape-rendering-crispEdges">
+                        <path d="M1,0 H3 V1 H4 V0 H6 V2 H7 V4 H6 V5 H5 V6 H4 V7 H3 V6 H2 V5 H1 V4 H0 V2 H1 Z" fill="#d82838" />
+                        <rect x="2" y="1" width="1" height="1" fill="#f8f8f8" />
+                        <rect x="5" y="1" width="1" height="1" fill="#f8f8f8" />
+                      </svg>
+                    ) : isHalf ? (
+                      // Half 8-bit Heart
+                      <svg width="14" height="14" viewBox="0 0 7 7" className="shape-rendering-crispEdges">
+                        <path d="M1,0 H3 V1 H4 V0 H6 V2 H7 V4 H6 V5 H5 V6 H4 V7 H3 V6 H2 V5 H1 V4 H0 V2 H1 Z" fill="#303030" />
+                        <path d="M1,0 H3 V1 H4 V7 H3 V6 H2 V5 H1 V4 H0 V2 H1 Z" fill="#d82838" />
+                      </svg>
+                    ) : (
+                      // Empty 8-bit Heart
+                      <svg width="14" height="14" viewBox="0 0 7 7" className="shape-rendering-crispEdges">
+                        <path d="M1,0 H3 V1 H4 V0 H6 V2 H7 V4 H6 V5 H5 V6 H4 V7 H3 V6 H2 V5 H1 V4 H0 V2 H1 Z" fill="#181818" stroke="#585858" strokeWidth="0.5" />
+                      </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <span className="text-[#f8f8f8] text-[10px] ml-1">
+              {Math.max(0, Math.round(player.hp))}
+            </span>
+          </div>
+
+          {/* Stepped Stamina Blocks */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#58c868] text-xs font-bold tracking-wider">ST</span>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalStaminaSegments }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-3 h-2 border border-black ${
+                    i < staminaSegments ? 'bg-[#58c868]' : 'bg-[#181818]'
+                  }`}
+                />
+              ))}
             </div>
           </div>
 
-          {/* Stamina Bar */}
-          <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-700/80 px-2.5 py-1 rounded shadow-lg backdrop-blur-xs">
-            <Zap className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
-            <div className="w-28 sm:w-36 h-2 bg-slate-900 rounded-xs overflow-hidden border border-slate-700">
-              <div
-                className="h-full bg-linear-to-r from-emerald-600 to-teal-400 transition-all duration-75"
-                style={{ width: `${staminaPercent}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Dawn Energy Bar */}
-          <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-700/80 px-2.5 py-1 rounded shadow-lg backdrop-blur-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <div className="w-28 sm:w-36 h-2 bg-slate-900 rounded-xs overflow-hidden border border-slate-700">
-              <div
-                className="h-full bg-linear-to-r from-amber-600 via-amber-500 to-yellow-300 transition-all duration-100"
-                style={{ width: `${dawnPercent}%` }}
-              />
+          {/* Dawn Crystal Orbs */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#f8a020] text-xs font-bold tracking-wider">DW</span>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: totalDawnOrbs }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2.5 h-2.5 rotate-45 border border-black ${
+                    i < dawnOrbs ? 'bg-[#f8f870] shadow-[0_0_2px_#f8a020]' : 'bg-[#181818]'
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Area Badge & Shards Counter */}
+        {/* Area & Shard Info Panel */}
         <div className="flex flex-col items-end gap-2">
-          {/* Area Title */}
-          <div className="bg-slate-950/80 border border-amber-500/30 px-3 py-1.5 rounded shadow-lg text-right backdrop-blur-xs">
-            <div className="flex items-center justify-end gap-1.5 text-amber-400 text-xs font-cinzel font-bold tracking-wider">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{currentArea.name}</span>
+          {/* 8-bit Area Title Card */}
+          <div className="bg-[#0b0714] border-2 border-[#f8a020] px-3 py-1.5 text-right shadow-[2px_2px_0px_#000000]">
+            <div className="text-[#f8a020] text-xs font-bold tracking-wider uppercase">
+              {currentArea.name}
             </div>
-            <div className="text-[10px] text-slate-400 font-retro">
+            <div className="text-[#c0c0c0] text-[9px] mt-0.5">
               {currentArea.subtitle}
             </div>
           </div>
 
-          {/* Shard Counter */}
-          <div className="bg-slate-950/80 border border-sky-500/30 px-2.5 py-1 rounded flex items-center gap-1.5 text-sky-400 text-xs font-retro shadow-md">
-            <Gem className="w-3.5 h-3.5 text-sky-400 fill-sky-400" />
-            <span>Memory Shards: {collectedCount} / {totalShards}</span>
+          {/* 8-bit Shard Tracker */}
+          <div className="bg-[#0b0714] border-2 border-[#58a8f8] px-2.5 py-1 flex items-center gap-2 text-[#88d8f8] text-[10px] shadow-[2px_2px_0px_#000000]">
+            <div className="w-2 h-2 rotate-45 bg-[#88d8f8] border border-black" />
+            <span>SHARDS: {collectedCount}/{totalShards}</span>
           </div>
         </div>
       </div>
 
-      {/* Boss Health Bar (when Boss is active) */}
+      {/* Boss Health Bar (When Final Boss is active) */}
       {bossEnemy && bossEnemy.state !== 'dead' && (
-        <div className="self-center w-full max-w-lg mb-2 flex flex-col items-center gap-1 bg-slate-950/90 border border-amber-500/60 p-2.5 rounded shadow-2xl backdrop-blur-sm animate-fade-in">
-          <div className="flex items-center justify-between w-full text-amber-400 font-cinzel font-bold text-xs sm:text-sm tracking-wider px-1">
-            <span>THE DYING KING</span>
-            <span className="text-purple-400 text-[10px] font-retro">
-              {bossEnemy.bossPhase === 3 ? 'Phase 3: Shadow Fiend' : bossEnemy.bossPhase === 2 ? 'Phase 2: Corrupted Sovereign' : 'Phase 1: High King of Eldoria'}
+        <div className="self-center w-full max-w-md mb-3 flex flex-col items-center gap-1 bg-[#0b0714] border-2 border-[#f83800] p-2 shadow-[3px_3px_0px_#000000]">
+          <div className="flex items-center justify-between w-full text-xs font-bold px-1">
+            <span className="text-[#f8a020] uppercase tracking-wider">THE DYING KING</span>
+            <span className="text-[#f0b0f8] text-[9px] uppercase">
+              {bossEnemy.bossPhase === 3 ? 'PHASE 3: SHADOW FIEND' : bossEnemy.bossPhase === 2 ? 'PHASE 2: CORRUPTED' : 'PHASE 1: SOVEREIGN'}
             </span>
           </div>
-          <div className="w-full h-3.5 bg-slate-900 rounded-xs overflow-hidden border border-slate-700 relative">
-            <div
-              className={`h-full transition-all duration-150 ${
-                bossEnemy.bossPhase === 3
-                  ? 'bg-linear-to-r from-purple-800 via-fuchsia-600 to-rose-500'
-                  : 'bg-linear-to-r from-amber-700 via-amber-500 to-yellow-400'
-              }`}
-              style={{ width: `${Math.max(0, (bossEnemy.hp / bossEnemy.maxHp) * 100)}%` }}
-            />
-            <span className="absolute inset-0 flex items-center justify-center font-retro text-[9px] text-white tracking-widest">
-              {Math.max(0, Math.round(bossEnemy.hp))} / {bossEnemy.maxHp}
-            </span>
+          {/* Stepped 8-bit Health Blocks */}
+          <div className="w-full h-3 bg-[#181818] border border-black flex gap-0.5 p-0.5">
+            {Array.from({ length: 24 }).map((_, idx) => {
+              const fillThreshold = (idx + 1) / 24;
+              const isFilled = (bossEnemy.hp / bossEnemy.maxHp) >= fillThreshold;
+              const barColor = bossEnemy.bossPhase === 3 ? 'bg-[#c868d8]' : 'bg-[#d82838]';
+              return (
+                <div
+                  key={idx}
+                  className={`flex-1 h-full ${isFilled ? barColor : 'bg-[#303030]'}`}
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Bottom Control Helpers subtle hint */}
-      <div className="text-[10px] text-slate-500 font-retro flex justify-between">
-        <span className="hidden sm:inline">A/D: Move | Space: Jump | Shift: Dash | J: Light Attack | K: Heavy Attack | L: Block | E: Interact</span>
-        <span className="ml-auto">ESC: Pause Menu</span>
+      {/* Retro Bottom Info */}
+      <div className="text-[9px] text-[#909090] flex justify-between tracking-wide">
+        <span className="hidden sm:inline">A/D:MOVE  SPACE:JUMP  SHIFT:DASH  J:SLASH  K:CLEAVE  L:BLOCK  E:ACTION</span>
+        <span className="ml-auto">ESC:PAUSE</span>
       </div>
     </div>
   );

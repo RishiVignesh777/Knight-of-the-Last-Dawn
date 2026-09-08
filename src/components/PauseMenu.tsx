@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Play, Volume2, VolumeX, BookOpen, Compass, RotateCcw, Monitor } from 'lucide-react';
 import { soundEngine } from '../audio/soundManager';
 import { PlayerStats, MemoryShard } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
@@ -42,127 +41,126 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
     );
   };
 
-  // Collect all world shards for codex
   const allShards: MemoryShard[] = Object.values(WORLD_AREAS).flatMap(a => a.memoryShards);
 
   return (
-    <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 select-none animate-fade-in">
-      <div className="w-full max-w-lg bg-slate-950 border-2 border-amber-600/70 p-6 rounded shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-          <h2 className="font-cinzel text-lg font-bold text-amber-300 tracking-wider">
-            PAUSED
+    <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50 select-none font-mono">
+      <div className="w-full max-w-lg bg-[#0b0714] border-4 border-[#f8a020] p-5 shadow-[6px_6px_0px_#000000]">
+        {/* 8-bit Pause Header */}
+        <div className="flex items-center justify-between border-b-2 border-[#585858] pb-3 mb-4">
+          <h2 className="text-[#f8f870] text-sm sm:text-base font-extrabold uppercase tracking-widest drop-shadow-[1px_1px_0px_#000000]">
+            PAUSE
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <button
               onClick={() => setActiveTab('main')}
-              className={`px-2.5 py-1 text-[10px] font-retro rounded border transition cursor-pointer ${
-                activeTab === 'main' ? 'bg-amber-600/30 border-amber-400 text-amber-300' : 'border-slate-800 text-slate-400'
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'main'
+                  ? 'bg-[#f8a020] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
               }`}
             >
-              Menu
+              MENU
             </button>
             <button
               onClick={() => setActiveTab('codex')}
-              className={`px-2.5 py-1 text-[10px] font-retro rounded border transition cursor-pointer ${
-                activeTab === 'codex' ? 'bg-amber-600/30 border-amber-400 text-amber-300' : 'border-slate-800 text-slate-400'
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'codex'
+                  ? 'bg-[#58a8f8] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
               }`}
             >
-              Codex ({player.memoryShards.length}/5)
+              SHARDS ({player.memoryShards.length}/5)
             </button>
             <button
               onClick={() => setActiveTab('controls')}
-              className={`px-2.5 py-1 text-[10px] font-retro rounded border transition cursor-pointer ${
-                activeTab === 'controls' ? 'bg-amber-600/30 border-amber-400 text-amber-300' : 'border-slate-800 text-slate-400'
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'controls'
+                  ? 'bg-[#f8a020] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
               }`}
             >
-              Controls
+              KEYS
             </button>
             <button
               onClick={() => setActiveTab('sound')}
-              className={`px-2.5 py-1 text-[10px] font-retro rounded border transition cursor-pointer ${
-                activeTab === 'sound' ? 'bg-amber-600/30 border-amber-400 text-amber-300' : 'border-slate-800 text-slate-400'
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'sound'
+                  ? 'bg-[#f8a020] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
               }`}
             >
-              Audio
+              AUDIO
             </button>
           </div>
         </div>
 
         {/* Tab 1: Main Menu Options */}
         {activeTab === 'main' && (
-          <div className="flex flex-col gap-3 py-2">
+          <div className="flex flex-col gap-2.5 py-1">
             <button
               onClick={onResume}
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/50 rounded font-retro text-xs transition cursor-pointer"
+              className="w-full py-2.5 bg-[#f8a020] hover:bg-[#f8f870] text-black font-extrabold text-xs uppercase tracking-wider border-2 border-[#f8f8f8] shadow-[2px_2px_0px_#000000] cursor-pointer"
             >
-              <Play className="w-4 h-4" />
-              <span>Resume Game</span>
+              RESUME GAME [ESC]
             </button>
 
             <button
               onClick={onToggleCrt}
-              className="flex items-center justify-between px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-retro text-xs transition cursor-pointer"
+              className="flex items-center justify-between px-3 py-2 bg-[#181818] hover:bg-[#303030] text-[#f8f8f8] border-2 border-[#585858] text-xs uppercase cursor-pointer"
             >
-              <span className="flex items-center gap-2">
-                <Monitor className="w-4 h-4 text-sky-400" />
-                CRT Scanline Shader
-              </span>
-              <span className={crtEnabled ? 'text-emerald-400' : 'text-slate-500'}>
-                {crtEnabled ? 'ENABLED' : 'DISABLED'}
+              <span>CRT SCANLINES</span>
+              <span className={crtEnabled ? 'text-[#58c868] font-bold' : 'text-[#909090]'}>
+                {crtEnabled ? 'ON' : 'OFF'}
               </span>
             </button>
 
             <button
               onClick={handleToggleMute}
-              className="flex items-center justify-between px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-retro text-xs transition cursor-pointer"
+              className="flex items-center justify-between px-3 py-2 bg-[#181818] hover:bg-[#303030] text-[#f8f8f8] border-2 border-[#585858] text-xs uppercase cursor-pointer"
             >
-              <span className="flex items-center gap-2">
-                {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                Audio Mute
-              </span>
-              <span className={isMuted ? 'text-rose-400' : 'text-emerald-400'}>
-                {isMuted ? 'MUTED' : 'ACTIVE'}
+              <span>CHIPTUNE AUDIO</span>
+              <span className={isMuted ? 'text-[#d82838] font-bold' : 'text-[#58c868] font-bold'}>
+                {isMuted ? 'MUTED' : 'ENABLED'}
               </span>
             </button>
 
             <button
               onClick={onQuitToMenu}
-              className="flex items-center justify-center gap-2 w-full py-2 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 border border-rose-800/50 rounded font-retro text-xs transition cursor-pointer mt-2"
+              className="w-full py-2 bg-[#181818] hover:bg-[#303030] text-[#d82838] hover:text-[#f83800] border-2 border-[#d82838] text-xs uppercase font-bold tracking-wider cursor-pointer mt-2"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Quit to Main Menu</span>
+              QUIT TO TITLE
             </button>
           </div>
         )}
 
         {/* Tab 2: Lore & Memory Shards Codex */}
         {activeTab === 'codex' && (
-          <div className="max-h-72 overflow-y-auto pr-1 flex flex-col gap-2.5 py-1">
-            <p className="font-cinzel text-xs text-slate-300 mb-1">
-              Collected memories of Sir Cael and the Fall of Eldoria:
+          <div className="max-h-64 overflow-y-auto pr-1 flex flex-col gap-2 py-1">
+            <p className="text-[10px] text-[#909090] uppercase mb-1">
+              RECOVERED MEMORIES OF ELDORIA:
             </p>
             {allShards.map(shard => {
               const unlocked = player.memoryShards.includes(shard.id);
               return (
                 <div
                   key={shard.id}
-                  className={`p-3 rounded border text-left ${
+                  className={`p-2.5 border-2 text-left ${
                     unlocked
-                      ? 'bg-slate-900/80 border-sky-500/40'
-                      : 'bg-slate-950 border-slate-800 opacity-50'
+                      ? 'bg-[#181818] border-[#58a8f8]'
+                      : 'bg-[#0b0714] border-[#303030] opacity-40'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-xs font-cinzel font-bold mb-1">
-                    <span className={unlocked ? 'text-sky-300' : 'text-slate-500'}>
-                      {unlocked ? shard.title : '??? Unknown Memory'}
+                  <div className="flex items-center justify-between text-xs font-bold mb-1">
+                    <span className={unlocked ? 'text-[#88d8f8]' : 'text-[#585858]'}>
+                      {unlocked ? shard.title : '??? UNKNOWN SHARD'}
                     </span>
-                    <span className="text-[9px] font-retro text-slate-500">
-                      {unlocked ? shard.areaName : 'Locked'}
+                    <span className="text-[9px] text-[#909090]">
+                      {unlocked ? shard.areaName : 'LOCKED'}
                     </span>
                   </div>
-                  <p className="font-cinzel text-xs text-slate-300 leading-relaxed italic">
-                    {unlocked ? `“${shard.memoryText}”` : 'Explore the dying kingdom to discover this memory shard.'}
+                  <p className="text-[10px] text-[#c0c0c0] leading-relaxed">
+                    {unlocked ? `"${shard.memoryText}"` : 'Explore Eldoria to uncover this memory shard.'}
                   </p>
                 </div>
               );
@@ -172,44 +170,44 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
         {/* Tab 3: Controls Reference */}
         {activeTab === 'controls' && (
-          <div className="grid grid-cols-2 gap-2 text-xs font-retro py-2">
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">A / D</span>
-              <span className="text-slate-300 text-[10px]">Move Left / Right</span>
+          <div className="grid grid-cols-2 gap-2 text-[10px] py-1">
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">A / D</span>
+              <span className="text-[#909090]">MOVE LEFT / RIGHT</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">SPACE</span>
-              <span className="text-slate-300 text-[10px]">Jump (Climb Ledges)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">SPACE</span>
+              <span className="text-[#909090]">JUMP / CLIMB</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">SHIFT</span>
-              <span className="text-slate-300 text-[10px]">Dash (Evade & Gap)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">SHIFT</span>
+              <span className="text-[#909090]">DASH EVADE</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">J</span>
-              <span className="text-slate-300 text-[10px]">Light Attack (Fast)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">J</span>
+              <span className="text-[#909090]">LIGHT SLASH</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">K</span>
-              <span className="text-slate-300 text-[10px]">Heavy Attack (Break)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">K</span>
+              <span className="text-[#909090]">HEAVY CLEAVE</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800">
-              <span className="text-amber-400 block mb-1">L</span>
-              <span className="text-slate-300 text-[10px]">Block (Parry Guard)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030]">
+              <span className="text-[#f8a020] block font-bold">L</span>
+              <span className="text-[#909090]">SHIELD BLOCK</span>
             </div>
-            <div className="bg-slate-900 p-2 rounded border border-slate-800 col-span-2">
-              <span className="text-amber-400 block mb-1">E</span>
-              <span className="text-slate-300 text-[10px]">Interact (Shrines, NPCs, Murals, Shards)</span>
+            <div className="bg-[#181818] p-2 border border-[#303030] col-span-2">
+              <span className="text-[#f8a020] block font-bold">E</span>
+              <span className="text-[#909090]">INTERACT (SHRINE, NPC, DOOR, SHARD)</span>
             </div>
           </div>
         )}
 
         {/* Tab 4: Audio Volumes */}
         {activeTab === 'sound' && (
-          <div className="flex flex-col gap-4 py-2 font-retro text-xs">
+          <div className="flex flex-col gap-3 py-1 text-xs">
             <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>Master Volume</span>
+              <div className="flex justify-between text-[#c0c0c0] mb-1 text-[10px]">
+                <span>MASTER LEVEL</span>
                 <span>{Math.round(masterVol * 100)}%</span>
               </div>
               <input
@@ -219,12 +217,12 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 step="0.05"
                 value={masterVol}
                 onChange={e => handleVolumeChange('master', parseFloat(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[#f8a020] cursor-pointer"
               />
             </div>
             <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>Music Volume</span>
+              <div className="flex justify-between text-[#c0c0c0] mb-1 text-[10px]">
+                <span>CHIPTUNE MUSIC</span>
                 <span>{Math.round(musicVol * 100)}%</span>
               </div>
               <input
@@ -234,12 +232,12 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 step="0.05"
                 value={musicVol}
                 onChange={e => handleVolumeChange('music', parseFloat(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[#f8a020] cursor-pointer"
               />
             </div>
             <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>SFX Volume</span>
+              <div className="flex justify-between text-[#c0c0c0] mb-1 text-[10px]">
+                <span>8-BIT SOUND FX</span>
                 <span>{Math.round(sfxVol * 100)}%</span>
               </div>
               <input
@@ -249,19 +247,19 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 step="0.05"
                 value={sfxVol}
                 onChange={e => handleVolumeChange('sfx', parseFloat(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[#f8a020] cursor-pointer"
               />
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <div className="mt-4 border-t border-slate-900 pt-3 flex justify-end">
+        <div className="mt-3 border-t border-[#303030] pt-2 flex justify-end">
           <button
             onClick={onResume}
-            className="px-4 py-1.5 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/50 rounded font-retro text-xs transition cursor-pointer"
+            className="px-3 py-1 bg-[#181818] border-2 border-[#585858] text-[#f8f8f8] hover:text-[#f8a020] text-[10px] uppercase font-bold cursor-pointer"
           >
-            Close Menu [ESC]
+            CLOSE [ESC]
           </button>
         </div>
       </div>

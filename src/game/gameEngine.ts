@@ -41,6 +41,7 @@ import { particleEngine } from './particleSystem';
 import { spriteRenderer } from './spriteRenderer';
 import { parallaxEngine } from './parallaxBackgrounds';
 import { lightingEngine } from './lightingEngine';
+import { PALETTE, drawPixelRect } from './pixelArtHelper';
 
 export class GameEngine {
   public state: GameState = GameState.MENU;
@@ -1005,6 +1006,12 @@ export class GameEngine {
 
   // ================= MAIN CANVAS RENDER =================
   public render(ctx: CanvasRenderingContext2D) {
+    // 0. If in main menu, render the cinematic 8-bit title screen vista!
+    if (this.state === GameState.MENU) {
+      parallaxEngine.renderTitleScreenVista(ctx, this.gameTime);
+      return;
+    }
+
     const area = WORLD_AREAS[this.currentAreaId];
     
     // Camera shake offset
@@ -1033,23 +1040,31 @@ export class GameEngine {
       }
     }
 
-    // 5. Render NPCs
+    // 5. Render NPCs (Authentic 8-bit robed elder/pilgrim)
     for (const npc of area.npcs) {
       const rx = Math.floor(npc.x - camX);
       const ry = Math.floor(npc.y - camY);
-      // NPC sprite
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(rx, ry + 8, 16, 24);
-      ctx.fillStyle = '#fde047'; // Lantern or bell
-      ctx.fillRect(rx + 14, ry + 16, 5, 8);
-      // Head
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(rx + 2, ry, 12, 10);
-      // Interaction prompt indicator
+      
+      // Robe body
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, rx + 2, ry + 8, 14, 16);
+      drawPixelRect(ctx, PALETTE.RUST, rx + 4, ry + 10, 10, 14);
+      // Cowl hood
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, rx + 3, ry, 12, 9);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, rx + 5, ry + 3, 8, 5);
+      // Wooden staff
+      drawPixelRect(ctx, PALETTE.AMBER_DARK, rx, ry - 4, 2, 28);
+      // Golden Pilgrim Lantern
+      drawPixelRect(ctx, PALETTE.GOLD, rx + 15, ry + 12, 4, 6);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 16, ry + 13, 2, 4);
+
+      // 8-bit interaction prompt indicator
       if (Math.hypot(this.player.x - npc.x, this.player.y - npc.y) < 40) {
-        ctx.fillStyle = '#fef08a';
-        ctx.font = '8px "Press Start 2P"';
-        ctx.fillText('E: TALK', rx - 10, ry - 6);
+        drawPixelRect(ctx, PALETTE.BLACK, rx - 12, ry - 14, 40, 10);
+        drawPixelRect(ctx, PALETTE.GOLD, rx - 11, ry - 13, 38, 8);
+        drawPixelRect(ctx, PALETTE.BLACK, rx - 10, ry - 12, 36, 6);
+        ctx.fillStyle = PALETTE.SUN_YELLOW;
+        ctx.font = '6px monospace';
+        ctx.fillText('E: TALK', rx - 8, ry - 7);
       }
     }
 

@@ -1,8 +1,9 @@
 import { Particle } from '../types';
+import { PALETTE, drawPixelRect } from './pixelArtHelper';
 
 export class ParticleSystem {
   private particles: Particle[] = [];
-  private readonly maxParticles = 350;
+  private readonly maxParticles = 200;
 
   public update(dt: number) {
     for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -16,21 +17,20 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Type-specific physics
+      // 8-bit stepped physics
       if (p.type === 'dust' || p.type === 'blood') {
-        p.vy += 300 * dt; // gravity
+        p.vy += 320 * dt;
       } else if (p.type === 'rain') {
-        // rain falls fast diagonally
-        p.vy = 420;
-        p.vx = -60;
+        p.vy = 400;
+        p.vx = -50;
       } else if (p.type === 'leaf') {
-        p.vx += Math.sin(p.life * 4) * 20 * dt;
-        p.vy = 45;
+        p.vx = Math.sin(p.life * 4) * 20;
+        p.vy = 35;
       } else if (p.type === 'firefly') {
-        p.vx = Math.sin(p.life * 3) * 15;
-        p.vy = Math.cos(p.life * 2) * 12;
+        p.vx = Math.sin(p.life * 3) * 12;
+        p.vy = Math.cos(p.life * 2) * 10;
       } else if (p.type === 'shockwave') {
-        p.size += 80 * dt;
+        p.size += 60 * dt;
       }
     }
   }
@@ -42,20 +42,20 @@ export class ParticleSystem {
     this.particles.push(particle);
   }
 
-  // Helper generators
+  // 8-bit Sword slash sparks
   public spawnSwordSlashSparks(x: number, y: number, dir: number, heavy: boolean) {
-    const count = heavy ? 16 : 8;
+    const count = heavy ? 10 : 5;
     for (let i = 0; i < count; i++) {
-      const angle = (dir > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 1.8;
-      const speed = 70 + Math.random() * (heavy ? 220 : 130);
+      const angle = (dir > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 1.6;
+      const speed = 60 + Math.random() * (heavy ? 160 : 100);
       this.emit({
-        x,
-        y,
+        x: Math.floor(x),
+        y: Math.floor(y),
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 30,
-        life: 0.15 + Math.random() * 0.18,
-        maxLife: 0.35,
-        color: heavy ? '#f59e0b' : '#fef08a',
+        vy: Math.sin(angle) * speed - 20,
+        life: 0.15 + Math.random() * 0.15,
+        maxLife: 0.3,
+        color: heavy ? PALETTE.GOLD : PALETTE.SUN_YELLOW,
         size: heavy ? 3 : 2,
         type: 'spark'
       });
@@ -63,121 +63,124 @@ export class ParticleSystem {
   }
 
   public spawnBloodSplatter(x: number, y: number, dir: number) {
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       this.emit({
-        x,
-        y,
-        vx: dir * (40 + Math.random() * 90),
-        vy: -40 - Math.random() * 80,
-        life: 0.25 + Math.random() * 0.2,
-        maxLife: 0.45,
-        color: '#7f1d1d',
+        x: Math.floor(x),
+        y: Math.floor(y),
+        vx: dir * (30 + Math.random() * 60),
+        vy: -30 - Math.random() * 50,
+        life: 0.2 + Math.random() * 0.15,
+        maxLife: 0.35,
+        color: PALETTE.CRIMSON,
         size: 2,
         type: 'blood'
       });
     }
   }
 
+  // 8-bit Dash Trail (stepped pixel afterimage blocks)
   public spawnDashTrail(x: number, y: number, dir: number) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       this.emit({
-        x: x - dir * (i * 6),
-        y: y + Math.random() * 24 - 12,
-        vx: -dir * 20,
-        vy: (Math.random() - 0.5) * 10,
-        life: 0.18,
-        maxLife: 0.18,
-        color: 'rgba(96, 165, 250, 0.6)',
+        x: Math.floor(x - dir * (i * 6)),
+        y: Math.floor(y + (i % 2 === 0 ? -4 : 4)),
+        vx: -dir * 15,
+        vy: 0,
+        life: 0.16,
+        maxLife: 0.16,
+        color: i % 2 === 0 ? PALETTE.CYAN_HIGHLIGHT : PALETTE.STEEL_BLUE,
         size: 3,
         type: 'slash_trail'
       });
     }
   }
 
+  // 8-bit Shockwave (expanding stepped diamond)
   public spawnShockwave(x: number, y: number) {
     this.emit({
-      x,
-      y,
+      x: Math.floor(x),
+      y: Math.floor(y),
       vx: 0,
       vy: 0,
-      life: 0.25,
-      maxLife: 0.25,
-      color: '#f59e0b',
+      life: 0.22,
+      maxLife: 0.22,
+      color: PALETTE.GOLD,
       size: 4,
       type: 'shockwave'
     });
   }
 
+  // 8-bit Dust puff
   public spawnDustPuff(x: number, y: number) {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       this.emit({
-        x: x + (Math.random() - 0.5) * 12,
-        y: y + Math.random() * 4,
-        vx: (Math.random() - 0.5) * 40,
-        vy: -15 - Math.random() * 20,
-        life: 0.25 + Math.random() * 0.15,
-        maxLife: 0.4,
-        color: '#78716c',
+        x: Math.floor(x + (Math.random() - 0.5) * 8),
+        y: Math.floor(y),
+        vx: (Math.random() - 0.5) * 30,
+        vy: -15 - Math.random() * 15,
+        life: 0.2 + Math.random() * 0.1,
+        maxLife: 0.3,
+        color: PALETTE.MID_GRAY,
         size: 2,
         type: 'dust'
       });
     }
   }
 
+  // 8-bit Weather particles
   public spawnWeatherParticles(weather: string, camX: number, camY: number, screenW: number, screenH: number) {
     if (weather === 'storm_rain') {
-      // Spawn rain drops
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 4; i++) {
         this.emit({
-          x: camX + Math.random() * (screenW + 100),
-          y: camY - 20,
-          vx: -60,
-          vy: 420,
-          life: 0.65,
-          maxLife: 0.65,
-          color: 'rgba(191, 219, 254, 0.75)',
+          x: Math.floor(camX + Math.random() * (screenW + 60)),
+          y: Math.floor(camY - 10),
+          vx: -50,
+          vy: 400,
+          life: 0.5,
+          maxLife: 0.5,
+          color: PALETTE.ICE_WHITE,
           size: 1,
           type: 'rain'
         });
       }
     } else if (weather === 'sunset_dust') {
-      if (Math.random() < 0.25) {
+      if (Math.random() < 0.2) {
         this.emit({
-          x: camX + Math.random() * screenW,
-          y: camY - 10,
-          vx: 15 + Math.random() * 10,
-          vy: 35 + Math.random() * 15,
-          life: 3.5,
-          maxLife: 3.5,
-          color: '#d97706',
+          x: Math.floor(camX + Math.random() * screenW),
+          y: Math.floor(camY - 6),
+          vx: 12 + Math.random() * 8,
+          vy: 25 + Math.random() * 10,
+          life: 2.8,
+          maxLife: 2.8,
+          color: PALETTE.GOLD,
           size: 2,
           type: 'leaf'
         });
       }
     } else if (weather === 'forest_fog' || weather === 'lake_mist') {
-      if (Math.random() < 0.35) {
+      if (Math.random() < 0.25) {
         this.emit({
-          x: camX + Math.random() * screenW,
-          y: camY + Math.random() * screenH,
-          vx: (Math.random() - 0.5) * 10,
-          vy: (Math.random() - 0.5) * 10,
-          life: 2.5 + Math.random() * 2.0,
-          maxLife: 4.5,
-          color: weather === 'forest_fog' ? '#34d399' : '#67e8f9',
+          x: Math.floor(camX + Math.random() * screenW),
+          y: Math.floor(camY + Math.random() * screenH),
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          life: 2.0 + Math.random() * 1.5,
+          maxLife: 3.5,
+          color: weather === 'forest_fog' ? PALETTE.MINT_GREEN : PALETTE.CYAN_HIGHLIGHT,
           size: 2,
           type: 'firefly'
         });
       }
     } else if (weather === 'dawn_rays') {
-      if (Math.random() < 0.35) {
+      if (Math.random() < 0.25) {
         this.emit({
-          x: camX + Math.random() * screenW,
-          y: camY + Math.random() * screenH,
-          vx: (Math.random() - 0.5) * 12,
-          vy: -15 - Math.random() * 15,
-          life: 2.0 + Math.random() * 1.5,
-          maxLife: 3.5,
-          color: '#fef08a',
+          x: Math.floor(camX + Math.random() * screenW),
+          y: Math.floor(camY + Math.random() * screenH),
+          vx: (Math.random() - 0.5) * 10,
+          vy: -12 - Math.random() * 10,
+          life: 1.8 + Math.random() * 1.2,
+          maxLife: 3.0,
+          color: PALETTE.SUN_YELLOW,
           size: 2,
           type: 'dawn'
         });
@@ -190,26 +193,31 @@ export class ParticleSystem {
     for (const p of this.particles) {
       const rx = Math.floor(p.x - camX);
       const ry = Math.floor(p.y - camY);
-      const alpha = Math.max(0, p.life / p.maxLife);
-
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = p.color;
 
       if (p.type === 'rain') {
-        // Pixel rain streak
-        ctx.fillRect(rx, ry, 1, 6);
+        // 8-bit Rain: 1x4 pixel line
+        drawPixelRect(ctx, p.color, rx, ry, 1, 4);
       } else if (p.type === 'shockwave') {
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(rx, ry, p.size * 1.6, p.size * 0.7, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        // 8-bit Expanding stepped diamond ring
+        const s = Math.floor(p.size);
+        drawPixelRect(ctx, p.color, rx - s, ry, 2, 2);
+        drawPixelRect(ctx, p.color, rx + s, ry, 2, 2);
+        drawPixelRect(ctx, p.color, rx, ry - s, 2, 2);
+        drawPixelRect(ctx, p.color, rx, ry + s, 2, 2);
+        const half = Math.floor(s * 0.7);
+        drawPixelRect(ctx, p.color, rx - half, ry - half, 2, 2);
+        drawPixelRect(ctx, p.color, rx + half, ry - half, 2, 2);
+        drawPixelRect(ctx, p.color, rx - half, ry + half, 2, 2);
+        drawPixelRect(ctx, p.color, rx + half, ry + half, 2, 2);
       } else if (p.type === 'firefly') {
-        ctx.fillRect(rx, ry, 2, 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(rx - 1, ry - 1, 4, 4);
+        // 8-bit blinking 2x2 firefly
+        const blink = Math.floor(p.life * 6) % 2 === 0;
+        if (blink) {
+          drawPixelRect(ctx, p.color, rx, ry, 2, 2);
+        }
       } else {
-        ctx.fillRect(rx, ry, Math.floor(p.size), Math.floor(p.size));
+        const s = Math.floor(p.size);
+        drawPixelRect(ctx, p.color, rx, ry, s, s);
       }
     }
     ctx.restore();

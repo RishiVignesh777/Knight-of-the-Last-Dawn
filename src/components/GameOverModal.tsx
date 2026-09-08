@@ -1,5 +1,4 @@
 import React from 'react';
-import { Skull, RotateCcw } from 'lucide-react';
 
 interface GameOverModalProps {
   onRespawn: () => void;
@@ -8,35 +7,44 @@ interface GameOverModalProps {
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({ onRespawn, onQuitToMenu }) => {
   return (
-    <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 select-none animate-fade-in">
-      <div className="w-full max-w-md bg-slate-950 border-2 border-rose-900/80 p-6 sm:p-8 rounded shadow-2xl text-center">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-rose-950 border border-rose-700 flex items-center justify-center text-rose-400 shadow-[0_0_20px_rgba(225,29,72,0.4)]">
-          <Skull className="w-7 h-7" />
+    <div className="absolute inset-0 bg-black/85 flex items-center justify-center p-4 z-50 select-none font-mono">
+      {/* 8-Bit NES Game Over Window */}
+      <div className="w-full max-w-md bg-[#0b0714] border-4 border-[#d82838] p-6 shadow-[6px_6px_0px_#000000] text-center">
+        {/* 8-bit skull pixel art */}
+        <div className="w-8 h-8 mx-auto mb-3 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 8 8" className="shape-rendering-crispEdges">
+            <path d="M2,0 H6 V1 H7 V4 H6 V5 H5 V6 H3 V5 H2 V4 H1 V1 H2 Z" fill="#f8f8f8" />
+            <rect x="2" y="2" width="1" height="2" fill="#0b0714" />
+            <rect x="5" y="2" width="1" height="2" fill="#0b0714" />
+            <rect x="3" y="6" width="2" height="2" fill="#f8f8f8" />
+          </svg>
         </div>
 
-        <span className="font-retro text-[10px] text-rose-400 tracking-widest uppercase">The Darkness Overcomes</span>
-        <h1 className="font-cinzel text-2xl sm:text-3xl font-bold text-slate-100 tracking-wider mt-1 mb-2">
-          The Dawn Has Fallen
+        <div className="text-[#f83800] text-xs font-bold tracking-widest uppercase mb-1">
+          THE LAST LIGHT FADES
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#d82838] tracking-widest uppercase mb-3 drop-shadow-[2px_2px_0px_#400010]">
+          GAME OVER
         </h1>
 
-        <p className="font-cinzel text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
-          Sir Cael falls in the dying lands of Eldoria. Yet the vow engraved upon your armor still beckons from the last shrine.
+        <p className="text-[#c0c0c0] text-[11px] leading-relaxed mb-6 px-2">
+          SIR CAEL HAS FALLEN. YET THE PROMISE OF THE LAST DAWN REMAINS UNFULFILLED.
         </p>
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
           <button
             onClick={onRespawn}
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-linear-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-retro font-bold text-xs rounded border border-amber-400 shadow-lg transition cursor-pointer"
+            className="w-full py-2.5 bg-[#f8a020] hover:bg-[#f8f870] text-black font-extrabold text-xs uppercase tracking-wider border-2 border-[#f8f8f8] shadow-[2px_2px_0px_#000000] cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Awaken at Shrine [Space]</span>
+            CONTINUE [SPACE]
           </button>
 
           <button
             onClick={onQuitToMenu}
-            className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-retro text-xs rounded border border-slate-800 transition cursor-pointer"
+            className="w-full py-2 bg-[#181818] hover:bg-[#303030] text-[#909090] hover:text-[#f8f8f8] font-bold text-xs uppercase tracking-wider border-2 border-[#585858] shadow-[2px_2px_0px_#000000] cursor-pointer"
           >
-            Return to Title
+            RETURN TO TITLE
           </button>
         </div>
       </div>
