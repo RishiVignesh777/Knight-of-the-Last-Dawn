@@ -1,8 +1,8 @@
 import { PlayerStats, PlayerAction, Direction, Enemy, EnemyType, Projectile, Platform, Landmark, MemoryShard } from '../types';
-import { PALETTE, drawPixelRect, drawPixelCrystal } from './pixelArtHelper';
+import { PALETTE, drawPixelRect, drawPixelCrystal, drawGothicArch, drawOrnateCross, drawRoseWindow } from './pixelArtHelper';
 
 export class SpriteRenderer {
-  // ================= SIR CAEL (8-BIT PLAYER SPRITE) =================
+  // ================= SIR CAEL (DARK GOTHIC KNIGHT) =================
   public renderPlayer(ctx: CanvasRenderingContext2D, p: PlayerStats, camX: number, camY: number, time: number) {
     const rx = Math.floor(p.x - camX);
     const ry = Math.floor(p.y - camY);
@@ -12,7 +12,7 @@ export class SpriteRenderer {
     ctx.translate(rx + Math.floor(p.width / 2), ry + Math.floor(p.height / 2));
     ctx.scale(p.facing === Direction.RIGHT ? 1 : -1, 1);
 
-    // Authentic 8-bit hit flicker (alternating on/off every frame)
+    // Hit flicker
     if (p.invincibleTimer > 0 && Math.floor(time * 30) % 2 === 0) {
       ctx.restore();
       return;
@@ -21,12 +21,12 @@ export class SpriteRenderer {
     const halfW = -Math.floor(p.width / 2);
     const halfH = -Math.floor(p.height / 2);
 
-    // 8-bit frame calculations (discrete frames, no smooth floating point animation)
+    // Stepped discrete frame calculations
     const walkFrame = Math.floor(p.animTimer * 10) % 4;
-    const idleFrame = Math.floor(time * 2) % 2; // 2-frame subtle idle breath
+    const idleFrame = Math.floor(time * 2) % 2;
     const climbFrame = Math.floor(p.animTimer * 8) % 2;
 
-    // Body Y bob (stepped integer pixels)
+    // Body Y bob
     let bodyBob = 0;
     if (p.action === PlayerAction.IDLE) {
       bodyBob = idleFrame === 1 ? 1 : 0;
@@ -36,239 +36,254 @@ export class SpriteRenderer {
 
     const bodyY = halfH + 7 + bodyBob;
 
-    // --- 1. CAPE (Discrete 8-bit blocky frames behind knight) ---
+    // --- 1. TATTERED PENITENT CLOAK (Deep dried burgundy / dark maroon with jagged fray) ---
     if (p.action !== PlayerAction.CLIMB && p.action !== PlayerAction.DEATH) {
-      const capeFrame = Math.floor((time * 4) + (p.vx !== 0 ? walkFrame : 0)) % 3;
-      const capeColorDark = PALETTE.DEEP_MAROON;
-      const capeColorMain = PALETTE.CRIMSON;
+      const capeFrame = Math.floor((time * 5) + (p.vx !== 0 ? walkFrame * 1.5 : 0)) % 3;
+      const capeDark = PALETTE.DEEP_MAROON;
+      const capeMid = PALETTE.BURGUNDY;
+      const capeTrim = PALETTE.CRIMSON;
 
       if (p.action === PlayerAction.JUMP) {
-        // Jumping cape streaming down/back
-        drawPixelRect(ctx, capeColorDark, halfW - 3, bodyY + 4, 3, 10);
-        drawPixelRect(ctx, capeColorMain, halfW - 5, bodyY + 7, 2, 8);
+        // Jumping mantle billowing backwards
+        drawPixelRect(ctx, capeDark, halfW - 4, bodyY + 3, 4, 11);
+        drawPixelRect(ctx, capeMid, halfW - 7, bodyY + 6, 4, 9);
+        drawPixelRect(ctx, capeTrim, halfW - 9, bodyY + 11, 3, 4);
       } else if (p.action === PlayerAction.DASH) {
-        // Dashing cape horizontal
-        drawPixelRect(ctx, capeColorDark, halfW - 8, bodyY + 3, 8, 4);
-        drawPixelRect(ctx, capeColorMain, halfW - 12, bodyY + 4, 4, 2);
+        // Dashing mantle streaming straight back
+        drawPixelRect(ctx, capeDark, halfW - 10, bodyY + 2, 10, 5);
+        drawPixelRect(ctx, capeMid, halfW - 14, bodyY + 3, 5, 4);
+        drawPixelRect(ctx, capeTrim, halfW - 16, bodyY + 4, 3, 2);
       } else {
-        // Standard flutter (3 discrete frames)
+        // Stepped idle/walking mantle flutter
         if (capeFrame === 0) {
-          drawPixelRect(ctx, capeColorDark, halfW + 1, bodyY + 3, 3, 10);
-          drawPixelRect(ctx, capeColorMain, halfW - 2, bodyY + 5, 3, 8);
-          drawPixelRect(ctx, capeColorMain, halfW - 4, bodyY + 9, 2, 5);
+          drawPixelRect(ctx, capeDark, halfW + 1, bodyY + 2, 4, 11);
+          drawPixelRect(ctx, capeMid, halfW - 3, bodyY + 4, 4, 9);
+          drawPixelRect(ctx, capeTrim, halfW - 5, bodyY + 9, 3, 5);
+          // Tattered fray notches
+          drawPixelRect(ctx, PALETTE.BLACK, halfW - 4, bodyY + 13, 2, 2);
         } else if (capeFrame === 1) {
-          drawPixelRect(ctx, capeColorDark, halfW + 1, bodyY + 3, 3, 11);
-          drawPixelRect(ctx, capeColorMain, halfW - 3, bodyY + 6, 4, 8);
-          drawPixelRect(ctx, capeColorMain, halfW - 6, bodyY + 8, 3, 4);
+          drawPixelRect(ctx, capeDark, halfW + 1, bodyY + 2, 4, 12);
+          drawPixelRect(ctx, capeMid, halfW - 4, bodyY + 5, 5, 9);
+          drawPixelRect(ctx, capeTrim, halfW - 7, bodyY + 8, 4, 5);
+          drawPixelRect(ctx, PALETTE.BLACK, halfW - 6, bodyY + 13, 2, 2);
         } else {
-          drawPixelRect(ctx, capeColorDark, halfW + 1, bodyY + 3, 3, 9);
-          drawPixelRect(ctx, capeColorMain, halfW - 2, bodyY + 4, 3, 8);
-          drawPixelRect(ctx, capeColorMain, halfW - 3, bodyY + 7, 2, 6);
+          drawPixelRect(ctx, capeDark, halfW + 1, bodyY + 2, 4, 10);
+          drawPixelRect(ctx, capeMid, halfW - 3, bodyY + 3, 4, 9);
+          drawPixelRect(ctx, capeTrim, halfW - 5, bodyY + 7, 3, 6);
+          drawPixelRect(ctx, PALETTE.BLACK, halfW - 4, bodyY + 12, 2, 2);
         }
       }
     }
 
-    // --- 2. LEGS & GREAVES (Stepped pixel frames) ---
-    const legDark = PALETTE.DARK_GRAY;
-    const legLight = PALETTE.MID_GRAY;
-    const bootColor = PALETTE.DARKEST_GRAY;
+    // --- 2. LEGS & FLUTED GREAVES (Dark steel with brass trim) ---
+    const steelDark = PALETTE.DARKEST_GRAY;
+    const steelMid = PALETTE.DARK_GRAY;
+    const steelLight = PALETTE.MID_GRAY;
+    const brassTrim = PALETTE.BRASS;
 
     if (p.action === PlayerAction.CLIMB) {
-      // Climbing ladder: alternating limbs
       if (climbFrame === 0) {
-        drawPixelRect(ctx, legDark, halfW + 3, halfH + 16, 4, 7);
-        drawPixelRect(ctx, legLight, halfW + 11, halfH + 14, 4, 9);
+        drawPixelRect(ctx, steelDark, halfW + 3, halfH + 16, 4, 7);
+        drawPixelRect(ctx, steelMid, halfW + 11, halfH + 14, 4, 9);
       } else {
-        drawPixelRect(ctx, legLight, halfW + 3, halfH + 14, 4, 9);
-        drawPixelRect(ctx, legDark, halfW + 11, halfH + 16, 4, 7);
+        drawPixelRect(ctx, steelMid, halfW + 3, halfH + 14, 4, 9);
+        drawPixelRect(ctx, steelDark, halfW + 11, halfH + 16, 4, 7);
       }
     } else if (p.action === PlayerAction.WALK || p.action === PlayerAction.RUN) {
-      // 4-frame walk cycle
       if (walkFrame === 0) {
-        // Forward stride
-        drawPixelRect(ctx, legLight, halfW + 8, halfH + 16, 4, 8);
-        drawPixelRect(ctx, bootColor, halfW + 9, halfH + 22, 5, 2);
-        drawPixelRect(ctx, legDark, halfW + 2, halfH + 16, 4, 7);
-        drawPixelRect(ctx, bootColor, halfW + 1, halfH + 21, 4, 2);
+        drawPixelRect(ctx, steelMid, halfW + 8, halfH + 16, 4, 8);
+        drawPixelRect(ctx, steelDark, halfW + 9, halfH + 22, 5, 2);
+        drawPixelRect(ctx, steelDark, halfW + 2, halfH + 16, 4, 7);
+        drawPixelRect(ctx, steelMid, halfW + 1, halfH + 21, 4, 2);
       } else if (walkFrame === 1) {
-        // Passing frame
-        drawPixelRect(ctx, legLight, halfW + 5, halfH + 16, 4, 8);
-        drawPixelRect(ctx, bootColor, halfW + 5, halfH + 22, 5, 2);
-        drawPixelRect(ctx, legDark, halfW + 8, halfH + 15, 3, 6);
+        drawPixelRect(ctx, steelMid, halfW + 5, halfH + 16, 4, 8);
+        drawPixelRect(ctx, steelDark, halfW + 5, halfH + 22, 5, 2);
+        drawPixelRect(ctx, steelDark, halfW + 8, halfH + 15, 3, 6);
       } else if (walkFrame === 2) {
-        // Opposite stride
-        drawPixelRect(ctx, legLight, halfW + 2, halfH + 16, 4, 8);
-        drawPixelRect(ctx, bootColor, halfW + 1, halfH + 22, 5, 2);
-        drawPixelRect(ctx, legDark, halfW + 9, halfH + 16, 4, 7);
-        drawPixelRect(ctx, bootColor, halfW + 9, halfH + 21, 4, 2);
+        drawPixelRect(ctx, steelMid, halfW + 2, halfH + 16, 4, 8);
+        drawPixelRect(ctx, steelDark, halfW + 1, halfH + 22, 5, 2);
+        drawPixelRect(ctx, steelDark, halfW + 9, halfH + 16, 4, 7);
+        drawPixelRect(ctx, steelMid, halfW + 9, halfH + 21, 4, 2);
       } else {
-        // Passing frame
-        drawPixelRect(ctx, legLight, halfW + 6, halfH + 16, 4, 8);
-        drawPixelRect(ctx, bootColor, halfW + 6, halfH + 22, 5, 2);
-        drawPixelRect(ctx, legDark, halfW + 4, halfH + 15, 3, 6);
+        drawPixelRect(ctx, steelMid, halfW + 6, halfH + 16, 4, 8);
+        drawPixelRect(ctx, steelDark, halfW + 6, halfH + 22, 5, 2);
+        drawPixelRect(ctx, steelDark, halfW + 4, halfH + 15, 3, 6);
       }
     } else if (p.action === PlayerAction.JUMP) {
-      // Tucked jump legs
-      drawPixelRect(ctx, legLight, halfW + 4, halfH + 15, 4, 6);
-      drawPixelRect(ctx, bootColor, halfW + 3, halfH + 19, 5, 2);
-      drawPixelRect(ctx, legDark, halfW + 9, halfH + 14, 4, 5);
-      drawPixelRect(ctx, bootColor, halfW + 9, halfH + 18, 5, 2);
+      drawPixelRect(ctx, steelMid, halfW + 4, halfH + 15, 4, 6);
+      drawPixelRect(ctx, steelDark, halfW + 3, halfH + 19, 5, 2);
+      drawPixelRect(ctx, steelDark, halfW + 9, halfH + 14, 4, 5);
+      drawPixelRect(ctx, steelMid, halfW + 9, halfH + 18, 5, 2);
     } else if (p.action === PlayerAction.DEATH) {
-      // Collapsed kneeling
-      drawPixelRect(ctx, legDark, halfW + 1, halfH + 18, 12, 5);
-      drawPixelRect(ctx, bootColor, halfW + 10, halfH + 20, 5, 3);
+      // Penitent collapsed kneeling
+      drawPixelRect(ctx, steelDark, halfW + 1, halfH + 18, 12, 5);
+      drawPixelRect(ctx, steelMid, halfW + 10, halfH + 20, 5, 3);
     } else {
       // Standing idle
-      drawPixelRect(ctx, legDark, halfW + 4, halfH + 16 + bodyBob, 3, 8 - bodyBob);
-      drawPixelRect(ctx, bootColor, halfW + 3, halfH + 22, 4, 2);
-      drawPixelRect(ctx, legLight, halfW + 9, halfH + 16 + bodyBob, 4, 8 - bodyBob);
-      drawPixelRect(ctx, bootColor, halfW + 9, halfH + 22, 5, 2);
+      drawPixelRect(ctx, steelDark, halfW + 4, halfH + 16 + bodyBob, 3, 8 - bodyBob);
+      drawPixelRect(ctx, steelMid, halfW + 3, halfH + 22, 4, 2);
+      drawPixelRect(ctx, steelMid, halfW + 9, halfH + 16 + bodyBob, 4, 8 - bodyBob);
+      drawPixelRect(ctx, steelDark, halfW + 9, halfH + 22, 5, 2);
+      // Knee cop brass trim
+      drawPixelRect(ctx, brassTrim, halfW + 10, halfH + 18 + bodyBob, 2, 2);
     }
 
-    // --- 3. TORSO & BREASTPLATE ---
-    const armorPlate = PALETTE.DARK_GRAY;
-    const armorLight = PALETTE.MID_GRAY;
-    const armorEdge = PALETTE.BRIGHT_GRAY;
-
+    // --- 3. FLUTED CUIRASS & RELIC PECTORAL ---
     if (p.action === PlayerAction.DEATH) {
-      // Slumped forward
-      drawPixelRect(ctx, armorPlate, halfW + 2, halfH + 12, 10, 8);
-      drawPixelRect(ctx, armorEdge, halfW + 4, halfH + 12, 7, 2);
+      drawPixelRect(ctx, steelDark, halfW + 2, halfH + 12, 10, 8);
+      drawPixelRect(ctx, steelMid, halfW + 4, halfH + 12, 7, 2);
     } else {
-      drawPixelRect(ctx, armorPlate, halfW + 3, bodyY, 11, 10);
-      drawPixelRect(ctx, armorLight, halfW + 5, bodyY + 1, 8, 2);
-      drawPixelRect(ctx, armorEdge, halfW + 4, bodyY + 5, 9, 1);
-      drawPixelRect(ctx, armorLight, halfW + 4, bodyY + 8, 9, 1);
+      // Dark fluted plate cuirass
+      drawPixelRect(ctx, steelDark, halfW + 3, bodyY, 11, 10);
+      drawPixelRect(ctx, steelMid, halfW + 4, bodyY + 1, 9, 3);
+      drawPixelRect(ctx, steelLight, halfW + 5, bodyY + 3, 7, 1);
+      drawPixelRect(ctx, steelDark, halfW + 4, bodyY + 5, 9, 1);
 
-      // Dawn Crest on Cael's chest (golden crystal motif)
-      drawPixelRect(ctx, PALETTE.GOLD, halfW + 8, bodyY + 3, 2, 2);
-      drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 8, bodyY + 2, 2, 1);
+      // Holy Dawn Sunburst Cross embossed on Sir Cael's breastplate
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 8, bodyY + 2, 2, 4);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 7, bodyY + 3, 4, 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 8, bodyY + 3, 2, 2);
 
-      // Belt
+      // Cingulum / Penitent rope belt with brass buckle
       drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 3, bodyY + 9, 11, 2);
-      drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 7, bodyY + 9, 2, 2);
+      drawPixelRect(ctx, brassTrim, halfW + 7, bodyY + 9, 2, 2);
     }
 
-    // --- 4. HELMET & GLOWING VISOR ---
+    // --- 4. GOTHIC HELMET (Pointed crest, halo spikes, cold glowing visor slit) ---
     const helmY = p.action === PlayerAction.DEATH ? halfH + 6 : bodyY - 7;
     const helmX = halfW + (p.action === PlayerAction.DEATH ? 4 : 4);
 
-    // Helmet dome & neck guard
-    drawPixelRect(ctx, PALETTE.DARKEST_GRAY, helmX, helmY, 9, 7);
-    drawPixelRect(ctx, armorLight, helmX + 1, helmY, 7, 2);
-    // Helmet crest ridge
-    drawPixelRect(ctx, armorEdge, helmX + 3, helmY - 1, 3, 2);
+    // Helmet dome & barbute neck guard
+    drawPixelRect(ctx, PALETTE.BLACK, helmX, helmY, 9, 7);
+    drawPixelRect(ctx, steelMid, helmX + 1, helmY, 7, 2);
+    // Pointed Gothic crest ridge
+    drawPixelRect(ctx, steelLight, helmX + 3, helmY - 2, 3, 3);
+    drawPixelRect(ctx, brassTrim, helmX + 4, helmY - 3, 1, 2);
 
-    // Glowing Visor (Cael's signature cyan 8-bit eye slit)
+    // Piercing Visor (Cold pale moonlight & sacred dawn spark)
     if (p.action !== PlayerAction.DEATH) {
+      drawPixelRect(ctx, PALETTE.STEEL_BLUE, helmX + 4, helmY + 3, 5, 1);
       drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, helmX + 5, helmY + 3, 4, 1);
-      drawPixelRect(ctx, PALETTE.WHITE, helmX + 6, helmY + 3, 2, 1);
+      drawPixelRect(ctx, PALETTE.ICE_WHITE, helmX + 6, helmY + 3, 2, 1);
     }
 
-    // --- 5. ARMS & 8-BIT BROADSWORD (Stepped Action Frames) ---
-    const hiltColor = PALETTE.AMBER;
-    const guardColor = PALETTE.PALE_GOLD;
-    const bladeColor = PALETTE.BRIGHT_GRAY;
+    // --- 5. ORNATE SACRED GREATSWORD & COMBAT MOTIONS ---
+    const hiltColor = PALETTE.DEEP_BROWN;
+    const guardColor = PALETTE.BRASS;
+    const pommelColor = PALETTE.GOLD;
+    const bladeSteel = PALETTE.PALE_STONE;
+    const bladeFuller = PALETTE.CYAN_HIGHLIGHT;
     const bladeEdge = PALETTE.WHITE;
 
     if (p.action === PlayerAction.ATTACK_LIGHT) {
-      // 3-frame discrete Light Slash
       const slashStep = Math.min(2, Math.floor(p.attackTimer / 0.08));
 
       if (slashStep === 0) {
-        // Frame 0: Windup (blade raised backward)
-        drawPixelRect(ctx, armorLight, halfW + 1, bodyY + 1, 3, 4);
+        // Frame 0: High angled windup
+        drawPixelRect(ctx, steelMid, halfW + 1, bodyY + 1, 3, 4);
         drawPixelRect(ctx, hiltColor, halfW - 1, bodyY - 1, 2, 3);
-        drawPixelRect(ctx, guardColor, halfW - 3, bodyY - 2, 6, 2);
-        drawPixelRect(ctx, bladeColor, halfW - 2, bodyY - 14, 4, 12);
-        drawPixelRect(ctx, bladeEdge, halfW - 1, bodyY - 14, 1, 12);
+        drawPixelRect(ctx, guardColor, halfW - 4, bodyY - 2, 8, 2);
+        drawPixelRect(ctx, pommelColor, halfW - 1, bodyY + 2, 2, 2);
+        // Upward blade with glowing sacred rune line
+        drawPixelRect(ctx, bladeSteel, halfW - 2, bodyY - 15, 4, 13);
+        drawPixelRect(ctx, bladeFuller, halfW - 1, bodyY - 14, 2, 10);
+        drawPixelRect(ctx, bladeEdge, halfW - 2, bodyY - 15, 1, 13);
       } else if (slashStep === 1) {
-        // Frame 1: Full horizontal slash arc with blocky 8-bit trail
-        drawPixelRect(ctx, armorLight, halfW + 11, bodyY + 3, 4, 3);
+        // Frame 1: Full horizontal execution slash with arterial crimson & holy light arc
+        drawPixelRect(ctx, steelMid, halfW + 11, bodyY + 3, 4, 3);
         drawPixelRect(ctx, hiltColor, halfW + 14, bodyY + 3, 3, 2);
-        drawPixelRect(ctx, guardColor, halfW + 16, bodyY + 1, 2, 6);
-        drawPixelRect(ctx, bladeColor, halfW + 18, bodyY + 2, 14, 3);
-        drawPixelRect(ctx, bladeEdge, halfW + 18, bodyY + 3, 14, 1);
+        drawPixelRect(ctx, guardColor, halfW + 16, bodyY + 1, 2, 7);
+        drawPixelRect(ctx, pommelColor, halfW + 13, bodyY + 3, 2, 2);
+        // Extended blade
+        drawPixelRect(ctx, bladeSteel, halfW + 18, bodyY + 2, 15, 3);
+        drawPixelRect(ctx, bladeFuller, halfW + 18, bodyY + 3, 13, 1);
+        drawPixelRect(ctx, bladeEdge, halfW + 18, bodyY + 2, 15, 1);
 
-        // Blocky 8-bit stepped sword slash trail
-        drawPixelRect(ctx, PALETTE.WHITE, halfW + 10, bodyY - 6, 4, 4);
-        drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 14, bodyY - 3, 5, 4);
-        drawPixelRect(ctx, PALETTE.WHITE, halfW + 20, bodyY, 6, 3);
-        drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 26, bodyY + 3, 6, 3);
+        // Gothic slash trail (crimson blood mist & cyan holy spark)
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, bodyY - 7, 5, 4);
+        drawPixelRect(ctx, PALETTE.BRIGHT_RED, halfW + 12, bodyY - 4, 6, 4);
+        drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 18, bodyY - 1, 7, 3);
+        drawPixelRect(ctx, PALETTE.ICE_WHITE, halfW + 25, bodyY + 2, 7, 2);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 30, bodyY + 3, 4, 2);
       } else {
-        // Frame 2: Recovery forward thrust
-        drawPixelRect(ctx, armorLight, halfW + 10, bodyY + 4, 3, 3);
-        drawPixelRect(ctx, bladeColor, halfW + 13, bodyY + 5, 10, 2);
-        drawPixelRect(ctx, bladeEdge, halfW + 13, bodyY + 5, 10, 1);
+        // Frame 2: Recovery thrust
+        drawPixelRect(ctx, steelMid, halfW + 10, bodyY + 4, 3, 3);
+        drawPixelRect(ctx, bladeSteel, halfW + 13, bodyY + 5, 11, 2);
+        drawPixelRect(ctx, bladeEdge, halfW + 13, bodyY + 5, 11, 1);
       }
     } else if (p.action === PlayerAction.ATTACK_HEAVY) {
-      // 4-frame Heavy Cleave
       const heavyStep = Math.min(3, Math.floor(p.attackTimer / 0.11));
 
       if (heavyStep === 0) {
-        // Frame 0: High two-handed overhead raise
-        drawPixelRect(ctx, armorLight, halfW + 5, bodyY - 3, 4, 4);
+        // Frame 0: Two-handed overhead raise
+        drawPixelRect(ctx, steelMid, halfW + 5, bodyY - 3, 4, 4);
         drawPixelRect(ctx, hiltColor, halfW + 6, bodyY - 6, 2, 4);
-        drawPixelRect(ctx, guardColor, halfW + 3, bodyY - 7, 8, 2);
-        drawPixelRect(ctx, bladeColor, halfW + 5, bodyY - 22, 4, 15);
-        drawPixelRect(ctx, PALETTE.GOLD, halfW + 6, bodyY - 22, 2, 15);
+        drawPixelRect(ctx, guardColor, halfW + 2, bodyY - 7, 10, 2);
+        drawPixelRect(ctx, bladeSteel, halfW + 5, bodyY - 24, 4, 17);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 6, bodyY - 23, 2, 15);
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 6, bodyY - 20, 2, 4);
       } else if (heavyStep === 1) {
-        // Frame 1: Mid-downward cleave
-        drawPixelRect(ctx, armorLight, halfW + 9, bodyY + 1, 4, 4);
-        drawPixelRect(ctx, bladeColor, halfW + 12, bodyY - 10, 10, 8);
-        drawPixelRect(ctx, PALETTE.GOLD, halfW + 14, bodyY - 8, 8, 4);
-        // Golden shock arc blocks
-        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 18, bodyY - 14, 4, 6);
-        drawPixelRect(ctx, PALETTE.GOLD, halfW + 22, bodyY - 8, 4, 6);
+        // Frame 1: Mid cleave descent
+        drawPixelRect(ctx, steelMid, halfW + 9, bodyY + 1, 4, 4);
+        drawPixelRect(ctx, bladeSteel, halfW + 12, bodyY - 12, 11, 9);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 14, bodyY - 10, 8, 5);
+        // Golden sacred halo burst
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 18, bodyY - 16, 5, 7);
+        drawPixelRect(ctx, PALETTE.AMBER, halfW + 23, halfH, 5, 7);
       } else if (heavyStep === 2) {
-        // Frame 2: Heavy ground impact! (blade buried in floor, ground shock blocks)
-        drawPixelRect(ctx, armorLight, halfW + 10, bodyY + 6, 4, 4);
-        drawPixelRect(ctx, guardColor, halfW + 11, halfH + 16, 6, 2);
-        drawPixelRect(ctx, bladeColor, halfW + 13, halfH + 18, 3, 6);
-        // Golden impact shockwave blocks
-        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 17, halfH + 20, 6, 4);
-        drawPixelRect(ctx, PALETTE.GOLD, halfW + 23, halfH + 21, 5, 3);
-        drawPixelRect(ctx, PALETTE.AMBER, halfW + 28, halfH + 22, 4, 2);
+        // Frame 2: Impact into stone! Greatsword buried with ground fissure
+        drawPixelRect(ctx, steelMid, halfW + 10, bodyY + 6, 4, 4);
+        drawPixelRect(ctx, guardColor, halfW + 10, halfH + 15, 8, 2);
+        drawPixelRect(ctx, bladeSteel, halfW + 13, halfH + 17, 3, 7);
+        // Sacred golden & arterial crimson ground fissure
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 17, halfH + 19, 7, 5);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 23, halfH + 20, 6, 4);
+        drawPixelRect(ctx, PALETTE.AMBER, halfW + 29, halfH + 21, 5, 3);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 16, halfH + 22, 10, 2);
       } else {
-        // Frame 3: Recovery pulling blade
-        drawPixelRect(ctx, armorLight, halfW + 8, bodyY + 4, 4, 4);
-        drawPixelRect(ctx, bladeColor, halfW + 12, bodyY + 5, 8, 3);
+        // Frame 3: Blade wrench recovery
+        drawPixelRect(ctx, steelMid, halfW + 8, bodyY + 4, 4, 4);
+        drawPixelRect(ctx, bladeSteel, halfW + 12, bodyY + 5, 9, 3);
       }
     } else if (p.action === PlayerAction.BLOCK) {
-      // 8-bit Block: Sword held vertically like a shield
-      drawPixelRect(ctx, armorLight, halfW + 9, bodyY + 3, 3, 4);
+      // Gothic Cross Parry Stance: Sword held vertically like a holy cruciform barrier
+      drawPixelRect(ctx, steelMid, halfW + 9, bodyY + 3, 3, 4);
       drawPixelRect(ctx, hiltColor, halfW + 11, bodyY + 5, 2, 3);
-      drawPixelRect(ctx, guardColor, halfW + 8, bodyY + 3, 7, 2);
-      drawPixelRect(ctx, bladeColor, halfW + 10, bodyY - 9, 3, 12);
-      drawPixelRect(ctx, bladeEdge, halfW + 11, bodyY - 9, 1, 12);
+      drawPixelRect(ctx, guardColor, halfW + 7, bodyY + 3, 9, 2);
+      drawPixelRect(ctx, bladeSteel, halfW + 10, bodyY - 10, 3, 13);
+      drawPixelRect(ctx, bladeEdge, halfW + 11, bodyY - 10, 1, 13);
 
-      // Block gleam spark (5x5 pixel star)
-      drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 10, bodyY - 2, 3, 3);
-      drawPixelRect(ctx, PALETTE.WHITE, halfW + 11, bodyY - 4, 1, 7);
-      drawPixelRect(ctx, PALETTE.WHITE, halfW + 8, bodyY - 1, 7, 1);
+      // Reliquary shield spark (golden cruciform starburst)
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 10, bodyY - 3, 3, 3);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 11, bodyY - 6, 1, 9);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 7, bodyY - 2, 9, 1);
+      drawPixelRect(ctx, PALETTE.WHITE, halfW + 11, bodyY - 2, 1, 1);
     } else if (p.action === PlayerAction.DASH) {
-      // Dashing forward thrust
-      drawPixelRect(ctx, armorLight, halfW + 10, bodyY + 4, 4, 3);
-      drawPixelRect(ctx, bladeColor, halfW + 14, bodyY + 5, 12, 2);
-      drawPixelRect(ctx, bladeEdge, halfW + 14, bodyY + 5, 12, 1);
+      // Dashing phantom lunge
+      drawPixelRect(ctx, steelMid, halfW + 10, bodyY + 4, 4, 3);
+      drawPixelRect(ctx, bladeSteel, halfW + 14, bodyY + 5, 13, 2);
+      drawPixelRect(ctx, bladeFuller, halfW + 14, bodyY + 5, 10, 1);
     } else if (p.action === PlayerAction.DEATH) {
-      // Sword planted in the earth
+      // Penitent greatsword planted in the earth like a grave marker
+      drawPixelRect(ctx, pommelColor, halfW + 13, halfH + 9, 2, 2);
       drawPixelRect(ctx, hiltColor, halfW + 13, halfH + 11, 2, 3);
-      drawPixelRect(ctx, guardColor, halfW + 10, halfH + 14, 7, 2);
-      drawPixelRect(ctx, bladeColor, halfW + 12, halfH + 16, 3, 8);
+      drawPixelRect(ctx, guardColor, halfW + 9, halfH + 14, 9, 2);
+      drawPixelRect(ctx, bladeSteel, halfW + 12, halfH + 16, 3, 8);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 13, halfH + 17, 1, 4);
     } else {
-      // Idle / Running: Sword resting at hip
-      drawPixelRect(ctx, armorLight, halfW + 2, bodyY + 3, 3, 4);
+      // Idle / Running: Greatsword sheathed at hip
+      drawPixelRect(ctx, steelMid, halfW + 2, bodyY + 3, 3, 4);
+      drawPixelRect(ctx, pommelColor, halfW - 1, bodyY, 2, 2);
       drawPixelRect(ctx, hiltColor, halfW - 1, bodyY + 2, 2, 3);
-      drawPixelRect(ctx, guardColor, halfW - 2, bodyY + 5, 5, 2);
-      drawPixelRect(ctx, bladeColor, halfW - 1, bodyY + 7, 3, 10);
-      drawPixelRect(ctx, bladeEdge, halfW, bodyY + 7, 1, 10);
+      drawPixelRect(ctx, guardColor, halfW - 3, bodyY + 5, 6, 2);
+      drawPixelRect(ctx, bladeSteel, halfW - 1, bodyY + 7, 3, 11);
+      drawPixelRect(ctx, bladeEdge, halfW, bodyY + 7, 1, 11);
     }
 
     ctx.restore();
   }
 
-  // ================= 8-BIT ENEMIES =================
+  // ================= GROTESQUE GOTHIC ENEMIES =================
   public renderEnemy(ctx: CanvasRenderingContext2D, e: Enemy, camX: number, camY: number, time: number) {
     if (e.state === 'dead') return;
 
@@ -282,136 +297,163 @@ export class SpriteRenderer {
     const halfW = -Math.floor(e.width / 2);
     const halfH = -Math.floor(e.height / 2);
 
-    // --- 1. CORRUPTED KNIGHT (18x24) ---
+    // --- 1. CORRUPTED KNIGHT: ASHEN INQUISITOR / FALLEN TEMPLAR (18x24) ---
     if (e.type === EnemyType.CORRUPTED_KNIGHT) {
       const walkFrame = Math.floor(time * 6) % 2;
       const isAttacking = e.state === 'attack';
 
-      // Legs
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 4, halfH + 16, 3, walkFrame === 0 ? 8 : 6);
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 10, halfH + 16, 3, walkFrame === 1 ? 8 : 6);
+      // Heavy blackened greaves
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH + 16, 3, walkFrame === 0 ? 8 : 6);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 10, halfH + 16, 3, walkFrame === 1 ? 8 : 6);
 
-      // Torso in corrupted plate
-      drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 3, halfH + 7, 11, 10);
-      drawPixelRect(ctx, PALETTE.DARK_VIOLET, halfW + 4, halfH + 8, 9, 2);
-      // Purple corruption veins
-      drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 7, halfH + 11, 3, 2);
-      drawPixelRect(ctx, PALETTE.LAVENDER, halfW + 8, halfH + 12, 1, 1);
+      // Fluted blackened steel plate cuirass
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 3, halfH + 7, 11, 10);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 4, halfH + 8, 9, 2);
 
-      // Corrupted Helmet
+      // Tattered ecclesiastical vestment in deep dried burgundy
+      drawPixelRect(ctx, PALETTE.BURGUNDY, halfW + 5, halfH + 10, 7, 6);
+      // Inverted broken sunburst relic in tarnished brass
+      drawPixelRect(ctx, PALETTE.AMBER_DARK, halfW + 7, halfH + 11, 3, 3);
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH + 12, 1, 1);
+
+      // Pointed inquisitor barbute helm
       drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH, 9, 7);
-      drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 5, halfH + 1, 7, 2);
-      // Glowing purple visor eyes
-      drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 7, halfH + 3, 4, 1);
-      drawPixelRect(ctx, PALETTE.PALE_LILAC, halfW + 8, halfH + 3, 2, 1);
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 5, halfH + 1, 7, 2);
+      // Sinister narrow crimson-violet eye slit
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 7, halfH + 3, 4, 1);
+      drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 8, halfH + 3, 2, 1);
 
-      // Jagged 8-bit Broadsword
+      // Serrated Ashen Flamberge / Executioner Blade
       if (isAttacking) {
-        // Slashing forward
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 13, halfH + 8, 11, 3);
-        drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 15, halfH + 7, 9, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 13, halfH + 8, 12, 3);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 15, halfH + 7, 10, 1);
+        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 17, halfH + 9, 4, 1);
       } else {
-        // Raised menacingly
-        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 12, halfH + 3, 3, 14);
-        drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 13, halfH + 2, 1, 14);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 11, halfH + 14, 5, 2);
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 12, halfH + 2, 3, 15);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 13, halfH + 1, 1, 15);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 10, halfH + 13, 7, 2);
       }
     }
-    // --- 2. SHADOW BEAST (22x14) ---
+    // --- 2. SHADOW BEAST: GARGOYLE HOUND / GHOUL FIEND (22x14) ---
     else if (e.type === EnemyType.SHADOW_BEAST) {
       const prowlFrame = Math.floor(time * 8) % 2;
 
-      // Beast body
+      // Sinewy petrified stone flesh body
       drawPixelRect(ctx, PALETTE.BLACK, halfW + 3, halfH + 3, 16, 7);
-      // Jagged spine ridges
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 6, halfH + 1, 3, 3);
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 11, halfH + 1, 3, 3);
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 5, halfH + 4, 12, 5);
 
-      // Head & glowing amber eye
+      // Jagged gargoyle spine ridges & shoulder spires
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 6, halfH + 1, 3, 3);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 11, halfH + 1, 3, 3);
+      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 7, halfH, 1, 2);
+
+      // Grotesque skull with fanged maw and glowing hollow eye
       drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 16, halfH + 2, 6, 6);
-      drawPixelRect(ctx, PALETTE.GOLD, halfW + 19, halfH + 3, 2, 2);
+      drawPixelRect(ctx, PALETTE.WHITE, halfW + 20, halfH + 6, 2, 2); // Fangs
+      drawPixelRect(ctx, PALETTE.AMBER, halfW + 18, halfH + 3, 2, 2); // Eye
 
-      // 4 Prowling Legs (2-frame animation)
+      // 4 Prowling stone taloned legs
       if (prowlFrame === 0) {
         drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH + 10, 3, 4);
         drawPixelRect(ctx, PALETTE.BLACK, halfW + 14, halfH + 10, 3, 4);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 3, halfH + 13, 2, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 13, halfH + 13, 2, 1);
       } else {
         drawPixelRect(ctx, PALETTE.BLACK, halfW + 2, halfH + 9, 3, 5);
         drawPixelRect(ctx, PALETTE.BLACK, halfW + 16, halfH + 9, 3, 5);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 1, halfH + 13, 2, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 15, halfH + 13, 2, 1);
       }
     }
-    // --- 3. FOREST WRAITH (18x24) ---
+    // --- 3. FOREST WRAITH: SHROUDED WEEPING NUN / BELL WRAITH (18x24) ---
     else if (e.type === EnemyType.FOREST_WRAITH) {
       const hoverBob = Math.floor(time * 4) % 2;
       const tatterFrame = Math.floor(time * 6) % 3;
 
-      // Floating cowl
+      // Heavy mourning veil & funeral shroud in void violet and deep burgundy
       drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 3, halfH + 2 + hoverBob, 12, 14);
-      // Hood cavity
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 4, halfH + 4 + hoverBob, 10, 11);
+
+      // Sunken hood cavity with veil lace
       drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + 3 + hoverBob, 8, 6);
-      // Twin glowing emerald eyes
+      // Twin weeping spectral eyes (pale eerie crypt green)
       drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 7, halfH + 5 + hoverBob, 2, 2);
       drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 10, halfH + 5 + hoverBob, 2, 2);
 
-      // Tattered hem tails
+      // Tattered funeral shroud hems
       if (tatterFrame === 0) {
         drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 4, halfH + 16 + hoverBob, 3, 5);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 9, halfH + 16 + hoverBob, 4, 7);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 9, halfH + 16 + hoverBob, 4, 7);
       } else if (tatterFrame === 1) {
         drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 5, halfH + 16 + hoverBob, 4, 6);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 11, halfH + 16 + hoverBob, 3, 5);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 11, halfH + 16 + hoverBob, 3, 5);
       } else {
         drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 3, halfH + 16 + hoverBob, 4, 7);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 8, halfH + 16 + hoverBob, 4, 5);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 8, halfH + 16 + hoverBob, 4, 5);
       }
 
-      // 8-bit dark energy diamond orb floating in front
-      drawPixelCrystal(ctx, halfW + 18, halfH + 8 + hoverBob, 6, 8, PALETTE.PURPLE, PALETTE.PALE_LILAC, PALETTE.VOID_PURPLE);
+      // Ornate Brass Censer hanging from iron chain, emitting eerie crypt flame
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 16, halfH + 6 + hoverBob, 1, 5); // Chain
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 15, halfH + 11 + hoverBob, 4, 4); // Censer body
+      // Spectral soul-flame crystal rising from censer
+      drawPixelCrystal(ctx, halfW + 17, halfH + 9 + hoverBob, 5, 6, PALETTE.BRIGHT_GREEN, PALETTE.MINT_GREEN, PALETTE.DARK_PINE);
     }
-    // --- 4. HOLLOW ARCHER (16x24) ---
+    // --- 4. HOLLOW ARCHER: PENITENT CROSSBOWMAN (16x24) ---
     else if (e.type === EnemyType.HOLLOW_ARCHER) {
-      // Skeletal frame
+      // Weathered bone ribcage wrapped in prayer ropes
       drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 4, halfH + 7, 8, 9);
-      // Skull
-      drawPixelRect(ctx, PALETTE.BRIGHT_GRAY, halfW + 5, halfH + 1, 7, 6);
-      // Red glowing eye socket
-      drawPixelRect(ctx, PALETTE.BRIGHT_RED, halfW + 8, halfH + 3, 2, 2);
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 4, halfH + 10, 8, 2); // Ropes
+
+      // Skeletal skull in weathered penitent hood
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 4, halfH, 9, 8);
+      drawPixelRect(ctx, PALETTE.PALE_STONE, halfW + 6, halfH + 2, 6, 5);
+      // Single burning hollow eye socket
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH + 3, 2, 2);
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 9, halfH + 3, 1, 1);
+
       // Skeletal legs
       drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 5, halfH + 16, 2, 8);
       drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 9, halfH + 16, 2, 8);
 
-      // Stepped wooden bow
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 13, halfH + 2, 2, 18);
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 12, halfH, 2, 3);
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 12, halfH + 19, 2, 3);
-      // Notched pixel arrow
-      drawPixelRect(ctx, PALETTE.WHITE, halfW + 7, halfH + 10, 8, 1);
-      drawPixelRect(ctx, PALETTE.BRIGHT_RED, halfW + 6, halfH + 9, 2, 3);
+      // Heavy Gothic Iron Arbalest / Crossbow
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 11, halfH + 8, 8, 3); // Stock
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 16, halfH + 2, 2, 15); // Iron prod / bow limb
+      drawPixelRect(ctx, PALETTE.PALE_STONE, halfW + 8, halfH + 7, 7, 1); // Loaded bolt
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 15, halfH + 6, 2, 3); // Blood-dipped tip
     }
-    // --- 5. ANCIENT GUARDIAN (32x40) ---
+    // --- 5. ANCIENT GUARDIAN: CATACOMB RELIQUARY SENTRY (32x40) ---
     else if (e.type === EnemyType.ANCIENT_GUARDIAN) {
       const stepFrame = Math.floor(time * 3) % 2;
 
-      // Heavy stone block legs
+      // Heavy carved stone sarcophagus pillars (legs)
       drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 5, halfH + 26, 8, stepFrame === 0 ? 14 : 12);
       drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 19, halfH + 26, 8, stepFrame === 1 ? 14 : 12);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 6, halfH + 27, 6, 2);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 20, halfH + 27, 6, 2);
 
-      // Massive stone torso
+      // Colossal basalt cathedral torso with carved gothic niches
       drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 3, halfH + 10, 26, 17);
-      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 5, halfH + 11, 22, 3);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 5, halfH + 11, 22, 3);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 4, halfH + 14, 2, 12);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 26, halfH + 14, 2, 12);
 
-      // Glowing cyan ancient runes across chest blocks
-      drawPixelRect(ctx, PALETTE.SKY_BLUE, halfW + 8, halfH + 16, 16, 2);
+      // Carved holy relic niches with glowing cyan scripture
+      drawPixelRect(ctx, PALETTE.STEEL_BLUE, halfW + 8, halfH + 16, 16, 2);
       drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 15, halfH + 13, 2, 8);
+      drawPixelRect(ctx, PALETTE.ICE_WHITE, halfW + 15, halfH + 16, 2, 2);
 
-      // Stone Golem Head
+      // Weeping Sarcophagus Knight Visage
       drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 9, halfH + 2, 14, 9);
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 10, halfH + 3, 12, 7);
       drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, halfW + 12, halfH + 5, 8, 2);
 
-      // Giant Stone Slab Hammer
-      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 28, halfH + 4, 5, 34);
-      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 25, halfH + 1, 12, 10);
-      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 26, halfH + 2, 10, 2);
+      // Colossal Gothic Tombstone Pillar Hammer (weathered stone with carved cross)
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 28, halfH + 4, 5, 34);
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 24, halfH + 1, 14, 11);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 25, halfH + 2, 12, 2);
+      // Embossed cross on tombstone head
+      drawPixelRect(ctx, PALETTE.PALE_STONE, halfW + 30, halfH + 4, 2, 6);
+      drawPixelRect(ctx, PALETTE.PALE_STONE, halfW + 28, halfH + 6, 6, 2);
     }
     // --- 6. FINAL BOSS: THE DYING KING (44x54) ---
     else if (e.type === EnemyType.DYING_KING) {
@@ -419,125 +461,137 @@ export class SpriteRenderer {
       const kingBob = Math.floor(time * 3) % 2;
 
       if (phase === 3) {
-        // PHASE 3: SHADOW FIEND (Horned monstrosity with stepped bat-like wings & scythe)
-        // Stepped pixel wings
-        const wingColor = PALETTE.VOID_PURPLE;
-        const wingDetail = PALETTE.DARK_VIOLET;
+        // PHASE 3: THE SHADOW FIEND / VOID MONSTROSITY
+        // Jagged membranous demonic wings of pure shadow
+        const wingColor = PALETTE.BLACK;
+        const wingDetail = PALETTE.VOID_PURPLE;
 
-        // Left wing blocks
-        drawPixelRect(ctx, wingColor, halfW - 24, halfH - 10, 26, 6);
-        drawPixelRect(ctx, wingColor, halfW - 20, halfH - 4, 22, 14);
-        drawPixelRect(ctx, wingDetail, halfW - 14, halfH + 10, 16, 10);
+        // Left wing
+        drawPixelRect(ctx, wingColor, halfW - 24, halfH - 12, 26, 7);
+        drawPixelRect(ctx, wingColor, halfW - 20, halfH - 5, 22, 15);
+        drawPixelRect(ctx, wingDetail, halfW - 14, halfH + 10, 16, 11);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW - 18, halfH - 2, 2, 10);
 
-        // Right wing blocks
-        drawPixelRect(ctx, wingColor, halfW + 38, halfH - 10, 26, 6);
-        drawPixelRect(ctx, wingColor, halfW + 38, halfH - 4, 22, 14);
-        drawPixelRect(ctx, wingDetail, halfW + 38, halfH + 10, 16, 10);
+        // Right wing
+        drawPixelRect(ctx, wingColor, halfW + 38, halfH - 12, 26, 7);
+        drawPixelRect(ctx, wingColor, halfW + 38, halfH - 5, 22, 15);
+        drawPixelRect(ctx, wingDetail, halfW + 38, halfH + 10, 16, 11);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 48, halfH - 2, 2, 10);
 
-        // Obsidian body
+        // Obsidian demonic torso
         drawPixelRect(ctx, PALETTE.BLACK, halfW + 8, halfH + 8, 26, 42);
         drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 10, halfH + 12, 22, 30);
 
-        // Horned skull & blazing crimson triple eyes
+        // Sprawling Horned Crown of Thorns
         drawPixelRect(ctx, PALETTE.DARK_VIOLET, halfW + 11, halfH - 2, 20, 12);
-        // Left & right horns
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 8, halfH - 14, 5, 14);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 29, halfH - 14, 5, 14);
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 7, halfH - 16, 6, 16);
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 29, halfH - 16, 6, 16);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH - 14, 2, 10);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 32, halfH - 14, 2, 10);
 
-        // Triple eyes
-        drawPixelRect(ctx, PALETTE.BRIGHT_RED, halfW + 14, halfH + 2, 3, 2);
-        drawPixelRect(ctx, PALETTE.BRIGHT_RED, halfW + 25, halfH + 2, 3, 2);
+        // Triple weeping crimson eyes
+        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 14, halfH + 2, 3, 2);
+        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 25, halfH + 2, 3, 2);
         drawPixelRect(ctx, PALETTE.WHITE, halfW + 19, halfH - 1, 4, 2);
 
-        // Pulsing Corrupted Void Core
+        // Pulsing Void Core (Corrupted Heart of Dawn)
         const corePulse = Math.floor(time * 6) % 3;
-        const coreColor = corePulse === 0 ? PALETTE.MAGENTA : corePulse === 1 ? PALETTE.PURPLE : PALETTE.PALE_LILAC;
+        const coreColor = corePulse === 0 ? PALETTE.MAGENTA : corePulse === 1 ? PALETTE.PURPLE : PALETTE.ARTERIAL_RED;
         drawPixelRect(ctx, coreColor, halfW + 17, halfH + 22, 8, 8);
         drawPixelRect(ctx, PALETTE.WHITE, halfW + 19, halfH + 24, 4, 4);
 
-        // Giant Dark Scythe Claw
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 34, halfH + 10, 5, 38);
-        drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 30, halfH + 6, 14, 5);
-        drawPixelRect(ctx, PALETTE.PALE_LILAC, halfW + 36, halfH + 2, 6, 5);
+        // Colossal Jagged Shadow Scythe Claw
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 34, halfH + 8, 6, 40);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 28, halfH + 4, 18, 6);
+        drawPixelRect(ctx, PALETTE.WHITE, halfW + 36, halfH - 1, 8, 5);
       } else {
-        // PHASE 1 & 2: FRACTURED GOLDEN SOVEREIGN (Cracked golden royal plate)
-        // Royal Cape
-        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW - 6, halfH + 10, 10, 40);
-        drawPixelRect(ctx, PALETTE.DARK_RED, halfW - 4, halfH + 14, 6, 34);
+        // PHASE 1 & 2: THE FRACTURED SOVEREIGN (Ceremonial plate fused with weeping corruption)
+        // Colossal Royal Mantle in dark blood burgundy
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW - 7, halfH + 10, 11, 40);
+        drawPixelRect(ctx, PALETTE.BURGUNDY, halfW - 5, halfH + 14, 7, 34);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW - 6, halfH + 42, 8, 2); // Gold hem
 
-        // Heavy Plate Greaves
-        drawPixelRect(ctx, PALETTE.RUST, halfW + 8, halfH + 38, 9, 14);
-        drawPixelRect(ctx, PALETTE.RUST, halfW + 24, halfH + 38, 9, 14);
+        // Heavy Fluted Royal Greaves
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 8, halfH + 38, 9, 14);
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 24, halfH + 38, 9, 14);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 10, halfH + 44, 5, 2);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 26, halfH + 44, 5, 2);
 
-        // Golden Torso with dark corrupted cracks
+        // Golden Reliquary Cuirass with bleeding corruption veins
         drawPixelRect(ctx, PALETTE.GOLD, halfW + 6, halfH + 12 + kingBob, 29, 27);
         drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 8, halfH + 13 + kingBob, 25, 3);
-        // Corruption cracks bleeding through armor
+        // Corruption cracks bleeding through the royal plate
         drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 12, halfH + 17 + kingBob, 5, 18);
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 21, halfH + 23 + kingBob, 9, 4);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 21, halfH + 23 + kingBob, 9, 4);
 
-        // The Corrupted Heart of Dawn embedded in chest (cycling 8-bit crystal)
+        // The Corrupted Heart of Dawn embedded in chest (reliquary crystal)
         const heartPulse = Math.floor(time * 5) % 2;
-        drawPixelRect(ctx, heartPulse === 0 ? PALETTE.MAGENTA : PALETTE.PURPLE, halfW + 18, halfH + 20 + kingBob, 6, 6);
-        drawPixelRect(ctx, PALETTE.PALE_LILAC, halfW + 19, halfH + 21 + kingBob, 4, 4);
+        drawPixelRect(ctx, heartPulse === 0 ? PALETTE.ARTERIAL_RED : PALETTE.BURGUNDY, halfW + 18, halfH + 20 + kingBob, 6, 6);
+        drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 19, halfH + 21 + kingBob, 4, 4);
 
-        // Imperial Crown & Golden Visor
-        drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 10, halfH + 2 + kingBob, 21, 11);
-        // Crown 3 stepped spikes
-        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 10, halfH - 4 + kingBob, 4, 7);
-        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 19, halfH - 7 + kingBob, 4, 10);
-        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 27, halfH - 4 + kingBob, 4, 7);
+        // Spired Imperial Crown & Shadow Visor
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 10, halfH + 2 + kingBob, 21, 11);
+        // Pointed Gothic crown spires
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 10, halfH - 5 + kingBob, 4, 8);
+        drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 19, halfH - 8 + kingBob, 4, 11);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 27, halfH - 5 + kingBob, 4, 8);
 
-        // Shadow beneath crown / visor
-        drawPixelRect(ctx, PALETTE.PURPLE, halfW + 13, halfH + 7 + kingBob, 15, 3);
+        // Visor cavity with weeping pale gold light
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 13, halfH + 7 + kingBob, 15, 4);
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 15, halfH + 8 + kingBob, 4, 2);
+        drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 23, halfH + 8 + kingBob, 4, 2);
 
-        // Giant Royal Broadsword
-        drawPixelRect(ctx, PALETTE.AMBER, halfW + 36, halfH + 8 + kingBob, 6, 8);
-        drawPixelRect(ctx, PALETTE.GOLD, halfW + 33, halfH + 14 + kingBob, 12, 3);
-        drawPixelRect(ctx, PALETTE.BRIGHT_GRAY, halfW + 37, halfH - 24 + kingBob, 4, 70);
-        drawPixelRect(ctx, PALETTE.WHITE, halfW + 38, halfH - 24 + kingBob, 2, 70);
+        // Colossal Royal Sun Cleaver (Greatsword)
+        drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 36, halfH + 8 + kingBob, 6, 8);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 32, halfH + 14 + kingBob, 14, 4);
+        drawPixelRect(ctx, PALETTE.PALE_STONE, halfW + 37, halfH - 26 + kingBob, 5, 72);
+        drawPixelRect(ctx, PALETTE.GOLD, halfW + 38, halfH - 24 + kingBob, 3, 68);
+        drawPixelRect(ctx, PALETTE.WHITE, halfW + 39, halfH - 24 + kingBob, 1, 68);
       }
     }
 
-    // Health bar above enemy (if damaged and not boss)
+    // Health bar above enemy
     if (e.hp < e.maxHp && !e.isBoss) {
       const barW = Math.max(16, e.width + 4);
       const barX = halfW - 2;
       const barY = halfH - 8;
       drawPixelRect(ctx, PALETTE.BLACK, barX, barY, barW, 4);
-      drawPixelRect(ctx, PALETTE.DARK_RED, barX + 1, barY + 1, barW - 2, 2);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, barX + 1, barY + 1, barW - 2, 2);
       const fillW = Math.max(0, Math.floor((barW - 2) * (e.hp / e.maxHp)));
-      drawPixelRect(ctx, PALETTE.BRIGHT_RED, barX + 1, barY + 1, fillW, 2);
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, barX + 1, barY + 1, fillW, 2);
     }
 
     ctx.restore();
   }
 
-  // ================= 8-BIT PROJECTILES =================
+  // ================= GOTHIC PROJECTILES =================
   public renderProjectile(ctx: CanvasRenderingContext2D, p: Projectile, camX: number, camY: number) {
     const rx = Math.floor(p.x - camX);
     const ry = Math.floor(p.y - camY);
 
     ctx.save();
     if (p.type === 'arrow') {
-      // 8-bit wooden arrow
-      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, rx - 6, ry - 1, 12, 2);
-      drawPixelRect(ctx, PALETTE.WHITE, rx + 4, ry - 2, 3, 4);
-      drawPixelRect(ctx, PALETTE.CRIMSON, rx - 7, ry - 2, 3, 4);
+      // Gothic iron crossbow bolt with blood-dipped quarrel head
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, rx - 6, ry - 1, 12, 2);
+      drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 4, ry - 2, 3, 4);
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, rx + 6, ry - 1, 2, 2);
+      drawPixelRect(ctx, PALETTE.BURGUNDY, rx - 7, ry - 2, 3, 4);
     } else if (p.type === 'dark_orb') {
-      // 8-bit diamond cross orb
+      // Eerie crypt soul-fire orb (spectral green & void purple)
       drawPixelRect(ctx, PALETTE.VOID_PURPLE, rx - 4, ry - 4, 8, 8);
-      drawPixelRect(ctx, PALETTE.MAGENTA, rx - 3, ry - 3, 6, 6);
-      drawPixelRect(ctx, PALETTE.PALE_LILAC, rx - 1, ry - 1, 2, 2);
+      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, rx - 3, ry - 3, 6, 6);
+      drawPixelRect(ctx, PALETTE.MINT_GREEN, rx - 1, ry - 1, 2, 2);
     } else if (p.type === 'shockwave') {
-      // 8-bit golden shock column
-      drawPixelRect(ctx, PALETTE.AMBER, rx - 6, ry - 10, 12, 20);
-      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx - 3, ry - 8, 6, 16);
+      // Holy reliquary dawn shockwave pillar
+      drawPixelRect(ctx, PALETTE.AMBER_DARK, rx - 6, ry - 10, 12, 20);
+      drawPixelRect(ctx, PALETTE.GOLD, rx - 4, ry - 9, 8, 18);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx - 2, ry - 8, 4, 16);
+      drawPixelRect(ctx, PALETTE.WHITE, rx - 1, ry - 6, 2, 12);
     }
     ctx.restore();
   }
 
-  // ================= 8-BIT TILES & PLATFORMS =================
+  // ================= GOTHIC TILES & ARCHITECTURE PLATFORMS =================
   public renderPlatform(ctx: CanvasRenderingContext2D, plat: Platform, camX: number, camY: number) {
     const rx = Math.floor(plat.x - camX);
     const ry = Math.floor(plat.y - camY);
@@ -547,12 +601,14 @@ export class SpriteRenderer {
     ctx.save();
 
     if (plat.type === 'ladder') {
-      // 8-bit Wooden Ladder
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, rx, ry, 3, h);
-      drawPixelRect(ctx, PALETTE.DEEP_BROWN, rx + w - 3, ry, 3, h);
-      // Stepped rungs every 8 pixels
+      // Wrought Iron Gothic Ladder with arched rungs
+      drawPixelRect(ctx, PALETTE.BLACK, rx, ry, 3, h);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + 1, ry, 1, h);
+      drawPixelRect(ctx, PALETTE.BLACK, rx + w - 3, ry, 3, h);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + w - 2, ry, 1, h);
       for (let y = 2; y < h; y += 8) {
-        drawPixelRect(ctx, PALETTE.RUST, rx + 3, ry + y, w - 6, 2);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, rx + 3, ry + y, w - 6, 2);
+        drawPixelRect(ctx, PALETTE.LIGHT_GRAY, rx + 3, ry + y, w - 6, 1);
       }
       ctx.restore();
       return;
@@ -560,124 +616,159 @@ export class SpriteRenderer {
 
     if (plat.type === 'hazard') {
       if (plat.theme === 'fire') {
-        // 8-bit animated flame hazard
+        // Burning funeral pyre / witch-fire hazard
         for (let x = 0; x < w; x += 6) {
-          drawPixelRect(ctx, PALETTE.BRIGHT_RED, rx + x, ry, 6, h);
-          drawPixelRect(ctx, PALETTE.GOLD, rx + x + 1, ry + 2, 4, h - 4);
-          drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + x + 2, ry + 4, 2, h - 6);
+          drawPixelRect(ctx, PALETTE.DEEP_MAROON, rx + x, ry, 6, h);
+          drawPixelRect(ctx, PALETTE.CRIMSON, rx + x + 1, ry + 1, 4, h - 2);
+          drawPixelRect(ctx, PALETTE.ARTERIAL_RED, rx + x + 1, ry + 3, 4, h - 4);
+          drawPixelRect(ctx, PALETTE.GOLD, rx + x + 2, ry + 4, 2, h - 5);
         }
       } else {
-        // 8-bit sharp iron spikes
+        // Sharp blackened iron spikes
         for (let x = 0; x < w; x += 8) {
-          drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + x + 1, ry + 6, 6, h - 6);
-          drawPixelRect(ctx, PALETTE.LIGHT_GRAY, rx + x + 2, ry + 3, 4, 4);
-          drawPixelRect(ctx, PALETTE.WHITE, rx + x + 3, ry, 2, 4);
+          drawPixelRect(ctx, PALETTE.BLACK, rx + x + 1, ry + 6, 6, h - 6);
+          drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + x + 2, ry + 3, 4, 4);
+          drawPixelRect(ctx, PALETTE.LIGHT_GRAY, rx + x + 3, ry, 2, 4);
+          drawPixelRect(ctx, PALETTE.WHITE, rx + x + 3, ry, 1, 2);
         }
       }
       ctx.restore();
       return;
     }
 
-    // Solid & One-Way platforms
+    // Weathered Gothic Stone Platforms & Masonry
     if (plat.theme === 'village_ground') {
-      // 8-bit Cobblestone dirt
+      // Weathered cemetery flagstones & dark earth
       drawPixelRect(ctx, PALETTE.DARKEST_GRAY, rx, ry, w, h);
-      drawPixelRect(ctx, PALETTE.MOSS_GREEN, rx, ry, w, 2); // Grass top
+      drawPixelRect(ctx, PALETTE.MID_GRAY, rx, ry, w, 2);
       for (let x = 4; x < w - 8; x += 16) {
         drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + x, ry + 4, 8, 4);
-        drawPixelRect(ctx, PALETTE.MID_GRAY, rx + x + 1, ry + 5, 6, 2);
+        drawPixelRect(ctx, PALETTE.PALE_STONE, rx + x + 1, ry + 4, 6, 1);
       }
     } else if (plat.theme === 'moss_ground' || plat.theme === 'branch') {
-      // 8-bit Mossy forest stone
+      // Mossy crypt masonry / overgrown stone arches
       drawPixelRect(ctx, PALETTE.NIGHT_GREEN, rx, ry, w, h);
-      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, rx, ry, w, 2);
-      drawPixelRect(ctx, PALETTE.FOREST_GREEN, rx, ry + 2, w, 2);
+      drawPixelRect(ctx, PALETTE.DARK_PINE, rx, ry, w, 2);
+      drawPixelRect(ctx, PALETTE.MOSS_GREEN, rx, ry + 2, w, 2);
+      for (let x = 6; x < w - 6; x += 18) {
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + x, ry + 4, 6, 4);
+      }
     } else if (plat.theme === 'cliff') {
-      // 8-bit Slate cliff
-      drawPixelRect(ctx, PALETTE.MIDNIGHT_BLUE, rx, ry, w, h);
-      drawPixelRect(ctx, PALETTE.STEEL_BLUE, rx, ry, w, 2);
+      // Blackened slate crags
+      drawPixelRect(ctx, PALETTE.BLACK, rx, ry, w, h);
+      drawPixelRect(ctx, PALETTE.DARK_NAVY, rx, ry, w, 2);
+      drawPixelRect(ctx, PALETTE.STEEL_BLUE, rx, ry, w, 1);
     } else if (plat.theme === 'capital_paving' || plat.theme === 'marble') {
-      // 8-bit Royal paving
-      drawPixelRect(ctx, PALETTE.VOID_PURPLE, rx, ry, w, h);
-      drawPixelRect(ctx, PALETTE.PURPLE, rx, ry, w, 2);
+      // Polished dark cathedral paving with brass inlays
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, rx, ry, w, h);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, rx, ry, w, 2);
       for (let x = 8; x < w - 8; x += 20) {
-        drawPixelRect(ctx, PALETTE.DARK_VIOLET, rx + x, ry + 4, 12, 3);
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, rx + x, ry + 3, 12, 3);
+        drawPixelRect(ctx, PALETTE.BRASS, rx + x + 2, ry + 4, 8, 1);
       }
     } else if (plat.theme === 'crystal_gold' || plat.theme === 'celestial_stone' || plat.theme === 'apex_dais') {
-      // 8-bit Golden celestial masonry
-      drawPixelRect(ctx, PALETTE.RUST, rx, ry, w, h);
-      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx, ry, w, 2);
-      drawPixelRect(ctx, PALETTE.GOLD, rx, ry + 2, w, 2);
+      // Sanctum Reliquary Dais (Aged brass, golden filigree, pale marble)
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, rx, ry, w, h);
+      drawPixelRect(ctx, PALETTE.BRASS, rx, ry, w, 3);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, rx, ry, w, 1);
+      for (let x = 6; x < w - 6; x += 16) {
+        drawPixelRect(ctx, PALETTE.GOLD, rx + x, ry + 4, 4, 4);
+      }
     } else {
-      // Generic 8-bit stone
+      // Generic gothic ashlar stone
       drawPixelRect(ctx, PALETTE.DARK_GRAY, rx, ry, w, h);
       drawPixelRect(ctx, PALETTE.MID_GRAY, rx, ry, w, 2);
+      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, rx, ry, w, 1);
     }
 
     ctx.restore();
   }
 
-  // ================= 8-BIT LANDMARKS & SHRINES =================
+  // ================= ORNATE GOTHIC SHRINES & LANDMARKS =================
   public renderLandmark(ctx: CanvasRenderingContext2D, lm: Landmark, camX: number, camY: number, time: number) {
     const rx = Math.floor(lm.x - camX);
     const ry = Math.floor(lm.y - camY);
 
     ctx.save();
     if (lm.type === 'shrine') {
-      // Sacred 8-bit Dawn Shrine with 3-frame animated flame
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, rx + 2, ry + 16, 28, 16);
+      // Ornate Gothic Reliquary Altar:
+      // Carved stone pedestal, stone crucifix, melted beeswax candles, and holy brass brazier
+      drawPixelRect(ctx, PALETTE.BLACK, rx + 2, ry + 16, 28, 16);
       drawPixelRect(ctx, PALETTE.DARK_GRAY, rx, ry + 12, 32, 4);
-      drawPixelRect(ctx, PALETTE.GOLD, rx + 6, ry + 8, 20, 4);
+      drawPixelRect(ctx, PALETTE.BRASS, rx + 4, ry + 10, 24, 2);
 
-      // 3-frame 8-bit flame
+      // Stone crucifix at center back
+      drawOrnateCross(ctx, rx + 14, ry - 6, 18, PALETTE.MID_GRAY, PALETTE.LIGHT_GRAY);
+
+      // Tall melted wax candles on flanks
+      drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 4, ry + 2, 2, 8);
+      drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 26, ry + 4, 2, 6);
+      // Candle flames
+      const cFlicker = Math.floor(time * 8) % 2;
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 4, ry + (cFlicker === 0 ? 0 : 1), 2, 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 26, ry + (cFlicker === 0 ? 3 : 2), 2, 2);
+
+      // Sacred Dawn Brazier Flame (animated 3 frames)
       const flameFrame = Math.floor(time * 6) % 3;
-      const flameH = flameFrame === 0 ? 10 : flameFrame === 1 ? 12 : 9;
-      drawPixelRect(ctx, PALETTE.CRIMSON, rx + 10, ry + 8 - flameH, 12, flameH);
-      drawPixelRect(ctx, PALETTE.GOLD, rx + 12, ry + 9 - flameH, 8, flameH - 2);
-      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 14, ry + 10 - flameH, 4, flameH - 4);
+      const flameH = flameFrame === 0 ? 10 : flameFrame === 1 ? 13 : 9;
+      drawPixelRect(ctx, PALETTE.BURGUNDY, rx + 10, ry + 9 - flameH, 12, flameH);
+      drawPixelRect(ctx, PALETTE.GOLD, rx + 12, ry + 10 - flameH, 8, flameH - 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 14, ry + 11 - flameH, 4, flameH - 4);
+      drawPixelRect(ctx, PALETTE.WHITE, rx + 15, ry + 12 - flameH, 2, flameH - 6);
     } else if (lm.type === 'mural') {
-      // Ancient stone mural with glowing 8-bit runes
-      drawPixelRect(ctx, PALETTE.DARK_GRAY, rx, ry, lm.width, lm.height);
-      drawPixelRect(ctx, PALETTE.MID_GRAY, rx + 2, ry + 2, lm.width - 4, lm.height - 4);
-      for (let y = 6; y < lm.height - 6; y += 6) {
-        drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, rx + 6, ry + y, lm.width - 12, 2);
+      // Ornate Gothic Stone Reredos / Mural with pointed arch & scripture
+      drawGothicArch(ctx, rx, ry, lm.width, lm.height, PALETTE.DARKEST_GRAY, PALETTE.BLACK, 4);
+      // Carved stone interior with glowing reliquary runes
+      for (let y = 10; y < lm.height - 8; y += 6) {
+        drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, rx + 8, ry + y, lm.width - 16, 2);
+        drawPixelRect(ctx, PALETTE.ICE_WHITE, rx + 12, ry + y, lm.width - 24, 1);
       }
+      // Top small rose window
+      drawRoseWindow(ctx, rx + Math.floor(lm.width / 2), ry + 14, 6, PALETTE.DARKEST_GRAY, PALETTE.BURGUNDY, PALETTE.GOLD);
     } else if (lm.type === 'door') {
-      // 8-bit Golden portal archway
-      drawPixelRect(ctx, PALETTE.GOLD, rx, ry, 4, lm.height);
-      drawPixelRect(ctx, PALETTE.GOLD, rx + lm.width - 4, ry, 4, lm.height);
-      drawPixelRect(ctx, PALETTE.PALE_GOLD, rx, ry, lm.width, 4);
-      // Portal interior cycling 8-bit gold/yellow
+      // Monumental Pointed Gothic Archway with wrought iron portcullis and celestial mist
+      drawGothicArch(ctx, rx, ry, lm.width, lm.height, PALETTE.BRASS, PALETTE.BLACK, 5);
+      // Wrought iron portcullis bars
+      for (let x = rx + 6; x < rx + lm.width - 6; x += 6) {
+        drawPixelRect(ctx, PALETTE.DARKEST_GRAY, x, ry + 8, 2, lm.height - 8);
+      }
+      // Portal interior cycling celestial dawn light
       const pColor = Math.floor(time * 4) % 2 === 0 ? PALETTE.GOLD : PALETTE.SUN_YELLOW;
-      drawPixelRect(ctx, pColor, rx + 4, ry + 4, lm.width - 8, lm.height - 4);
+      drawPixelRect(ctx, pColor, rx + 6, ry + Math.floor(lm.height * 0.4), lm.width - 12, lm.height - Math.floor(lm.height * 0.4));
     }
     ctx.restore();
   }
 
-  // ================= 8-BIT MEMORY SHARD =================
+  // ================= SACRED MEMORY SHARD (GOTHIC RELIQUARY) =================
   public renderMemoryShard(ctx: CanvasRenderingContext2D, shard: MemoryShard, camX: number, camY: number, time: number) {
     const rx = Math.floor(shard.x - camX);
-    // Integer stepped bob
     const bob = Math.floor(Math.sin(time * 3) * 3);
     const ry = Math.floor(shard.y - camY + bob);
 
     ctx.save();
-    // 8-bit crystal diamond
-    drawPixelCrystal(ctx, rx + 8, ry + 8, 12, 16, PALETTE.SKY_BLUE, PALETTE.ICE_WHITE, PALETTE.ROYAL_BLUE);
+    // Sacred reliquary halo ring behind shard
+    const haloFrame = Math.floor(time * 4) % 2;
+    drawPixelRect(ctx, PALETTE.GOLD, rx + 4, ry + 4, 20, 20);
+    drawPixelRect(ctx, PALETTE.BLACK, rx + 6, ry + 6, 16, 16);
 
-    // 4 rotating sparkle pixels (8-bit sparkle cross)
+    // Glowing holy diamond reliquary crystal
+    drawPixelCrystal(ctx, rx + 14, ry + 14, 12, 16, PALETTE.CYAN_HIGHLIGHT, PALETTE.ICE_WHITE, PALETTE.STEEL_BLUE);
+
+    // 4 cruciform holy embers rotating around the shard
     const sFrame = Math.floor(time * 4) % 4;
     const offsets = [
-      [-5, 0],
-      [0, -5],
-      [5, 0],
-      [0, 5]
+      [-6, 0],
+      [0, -6],
+      [6, 0],
+      [0, 6]
     ];
     const [sx, sy] = offsets[sFrame];
-    drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 8 + sx, ry + 8 + sy, 2, 2);
+    drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 14 + sx, ry + 14 + sy, 2, 2);
+    drawPixelRect(ctx, PALETTE.PALE_GOLD, rx + 14 - sx, ry + 14 - sy, 2, 2);
 
     ctx.restore();
   }
 }
 
 export const spriteRenderer = new SpriteRenderer();
+

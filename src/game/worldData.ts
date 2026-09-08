@@ -4,12 +4,12 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
   [AreaId.VILLAGE]: {
     id: AreaId.VILLAGE,
     name: 'The Forgotten Village',
-    subtitle: 'Ruins of Oakhaven at Twilight',
+    subtitle: "Ruins of Valen's Hollow at Twilight",
     width: 1400,
     height: 360,
     spawnX: 70,
     spawnY: 260,
-    ambientLight: 'rgba(255, 140, 60, 0.18)',
+    ambientLight: 'rgba(28, 14, 32, 0.42)',
     weather: 'sunset_dust',
     platforms: [
       // Ground floor
@@ -146,12 +146,12 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
   [AreaId.FOREST]: {
     id: AreaId.FOREST,
     name: 'The Whispering Forest',
-    subtitle: 'The Sunken Canopy of Elders',
+    subtitle: 'The Sunken Crypt Canopy of Blackthorn',
     width: 1700,
     height: 420,
     spawnX: 60,
     spawnY: 330,
-    ambientLight: 'rgba(10, 30, 20, 0.42)',
+    ambientLight: 'rgba(6, 18, 14, 0.50)',
     weather: 'forest_fog',
     platforms: [
       // Ground with uneven roots
@@ -309,12 +309,12 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
   [AreaId.LAKE]: {
     id: AreaId.LAKE,
     name: 'The Moonlit Lake',
-    subtitle: 'The Mirror of Forgotten Tears',
+    subtitle: "Sorrow's Mere & The Drowned Spire",
     width: 1600,
     height: 380,
     spawnX: 60,
     spawnY: 290,
-    ambientLight: 'rgba(10, 15, 45, 0.45)',
+    ambientLight: 'rgba(6, 12, 34, 0.52)',
     weather: 'lake_mist',
     platforms: [
       // Cliffside ledges overlooking the vast mirror lake
@@ -468,12 +468,12 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
   [AreaId.CAPITAL]: {
     id: AreaId.CAPITAL,
     name: 'The Fallen Kingdom',
-    subtitle: 'The Citadel of Ashen Regalia',
+    subtitle: 'Citadel of Aethelgard & Ashen Regalia',
     width: 1800,
     height: 440,
     spawnX: 60,
     spawnY: 340,
-    ambientLight: 'rgba(25, 10, 25, 0.52)',
+    ambientLight: 'rgba(28, 12, 26, 0.56)',
     weather: 'storm_rain',
     platforms: [
       // Street stones & ruined castle walls
@@ -625,12 +625,12 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
   [AreaId.TOWER]: {
     id: AreaId.TOWER,
     name: 'The Tower of Dawn',
-    subtitle: 'Above the Sea of Clouds',
+    subtitle: 'High Spire Above the Shrouded Clouds',
     width: 1500,
     height: 680,
     spawnX: 70,
     spawnY: 610,
-    ambientLight: 'rgba(30, 20, 50, 0.35)',
+    ambientLight: 'rgba(32, 16, 46, 0.38)',
     weather: 'dawn_rays',
     platforms: [
       // Base sanctuary floor
