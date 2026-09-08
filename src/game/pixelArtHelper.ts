@@ -5,9 +5,32 @@ import { PALETTE, hexToRgb } from './palette';
 import type { RGB } from './palette';
 import { skySystem } from './skyRenderer';
 import type { DitherPatternType, SkyPhase } from './skyRenderer';
+import {
+  enforcePaletteConstraint,
+  enforceSpritePalette,
+  renderConstrainedSprite,
+  quantizeImageDataToPalette,
+  snapColorToPalette,
+  disableImageSmoothing,
+  getClosestPaletteColor,
+  PALETTE_ENTRIES
+} from './paletteConstraint';
+import type { PaletteEntry } from './paletteConstraint';
 
-export { PALETTE, hexToRgb, skySystem };
-export type { RGB, DitherPatternType, SkyPhase };
+export {
+  PALETTE,
+  hexToRgb,
+  skySystem,
+  enforcePaletteConstraint,
+  enforceSpritePalette,
+  renderConstrainedSprite,
+  quantizeImageDataToPalette,
+  snapColorToPalette,
+  disableImageSmoothing,
+  getClosestPaletteColor,
+  PALETTE_ENTRIES
+};
+export type { RGB, DitherPatternType, SkyPhase, PaletteEntry };
 
 // 4x4 Bayer Dither Matrix for authentic 8-bit gradient dithering
 export const BAYER_4X4 = [

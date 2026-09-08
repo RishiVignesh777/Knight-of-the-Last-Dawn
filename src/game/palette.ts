@@ -62,10 +62,13 @@ export const PALETTE = {
 } as const;
 
 export function hexToRgb(hex: string): RGB {
-  const cleanHex = hex.replace('#', '');
+  let cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+  }
   return {
-    r: parseInt(cleanHex.substring(0, 2), 16),
-    g: parseInt(cleanHex.substring(2, 4), 16),
-    b: parseInt(cleanHex.substring(4, 6), 16)
+    r: parseInt(cleanHex.substring(0, 2), 16) || 0,
+    g: parseInt(cleanHex.substring(2, 4), 16) || 0,
+    b: parseInt(cleanHex.substring(4, 6), 16) || 0
   };
 }
