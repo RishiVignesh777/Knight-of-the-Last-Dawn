@@ -677,8 +677,8 @@ export class GameEngine {
             type: 'arrow'
           });
         }
-      } else if (e.type === EnemyType.FOREST_WRAITH) {
-        // Flying wraith: hovers, tracks player, casts dark orbs
+      } else if (e.type === EnemyType.BELL_WRAITH || e.type === EnemyType.FOREST_WRAITH) {
+        // Flying wraith: hovers, tracks player, casts dark soul orbs
         e.facing = dirToPlayer;
         e.vy = Math.sin(this.gameTime * 3) * 20;
         if (distToPlayer > 120 && distToPlayer < 280) {
@@ -705,8 +705,35 @@ export class GameEngine {
             type: 'dark_orb'
           });
         }
-      } else if (e.type === EnemyType.SHADOW_BEAST) {
-        // Fast beast: patrols, lunges fast
+      } else if (e.type === EnemyType.ASHEN_MONK) {
+        // Ashen Monk: chants, summons crimson corrupted hex orbs
+        e.facing = dirToPlayer;
+        if (distToPlayer > 90 && distToPlayer < 240) {
+          e.vx = dirToPlayer * 35;
+        } else {
+          e.vx = 0;
+        }
+
+        if (distToPlayer < 220 && e.attackCooldown <= 0) {
+          e.attackCooldown = 2.5;
+          const angle = Math.atan2(p.y - e.y, p.x - e.x);
+          this.shootProjectile({
+            id: `hex_${Math.random()}`,
+            x: e.x + (e.facing === 1 ? e.width : 0),
+            y: e.y + 10,
+            vx: Math.cos(angle) * 130,
+            vy: Math.sin(angle) * 130,
+            radius: 5,
+            isEnemy: true,
+            damage: 24,
+            life: 3.0,
+            maxLife: 3.0,
+            color: '#b91c1c',
+            type: 'dark_orb'
+          });
+        }
+      } else if (e.type === EnemyType.CATHEDRAL_BEAST || e.type === EnemyType.SHADOW_BEAST) {
+        // Fast beast / gargoyle hound: patrols, lunges fast
         if (distToPlayer < 180) {
           e.facing = dirToPlayer;
           e.vx = dirToPlayer * 130;
@@ -720,24 +747,41 @@ export class GameEngine {
           if (e.x < e.patrolMinX) { e.x = e.patrolMinX; e.facing = 1; }
           if (e.x > e.patrolMaxX) { e.x = e.patrolMaxX; e.facing = -1; }
         }
-      } else if (e.type === EnemyType.ANCIENT_GUARDIAN) {
-        // Heavy guardian: slow march, heavy sweep
+      } else if (e.type === EnemyType.HOLLOW_SAINT || e.type === EnemyType.ANCIENT_GUARDIAN) {
+        // Colossal statue / ancient guardian: slow march, heavy reliquary sweep, shockwave
         if (distToPlayer < 200) {
           e.facing = dirToPlayer;
-          e.vx = dirToPlayer * 40;
+          e.vx = dirToPlayer * 35;
           if (distToPlayer < 55 && e.attackCooldown <= 0) {
-            e.attackCooldown = 1.8;
-            this.hitPlayer(35, dirToPlayer);
+            e.attackCooldown = 2.0;
+            this.hitPlayer(36, dirToPlayer);
             soundEngine.playSwordHit(true);
             particleEngine.spawnShockwave(e.x + e.width / 2, e.y + e.height);
+            this.camera.shake = 6;
           }
         } else {
-          e.vx = e.facing * 30;
+          e.vx = e.facing * 25;
+          if (e.x < e.patrolMinX) { e.x = e.patrolMinX; e.facing = 1; }
+          if (e.x > e.patrolMaxX) { e.x = e.patrolMaxX; e.facing = -1; }
+        }
+      } else if (e.type === EnemyType.BLOODBOUND_KNIGHT) {
+        // Heavy executioner: methodical march, devastating cleaver slam
+        if (distToPlayer < 180) {
+          e.facing = dirToPlayer;
+          e.vx = dirToPlayer * 55;
+          if (distToPlayer < 50 && e.attackCooldown <= 0) {
+            e.attackCooldown = 1.5;
+            this.hitPlayer(30, dirToPlayer);
+            soundEngine.playSwordSlash(true);
+            this.camera.shake = 5;
+          }
+        } else {
+          e.vx = e.facing * 35;
           if (e.x < e.patrolMinX) { e.x = e.patrolMinX; e.facing = 1; }
           if (e.x > e.patrolMaxX) { e.x = e.patrolMaxX; e.facing = -1; }
         }
       } else {
-        // Corrupted Knight
+        // Penitent Guard / Corrupted Knight
         if (distToPlayer < 160) {
           e.facing = dirToPlayer;
           e.vx = dirToPlayer * 70;

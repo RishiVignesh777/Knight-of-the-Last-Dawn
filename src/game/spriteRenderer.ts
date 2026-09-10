@@ -1,5 +1,5 @@
 import { PlayerStats, PlayerAction, Direction, Enemy, EnemyType, Projectile, Platform, Landmark, MemoryShard } from '../types';
-import { PALETTE, drawPixelRect, drawPixelCrystal, drawGothicArch, drawOrnateCross, drawRoseWindow } from './pixelArtHelper';
+import { PALETTE, drawPixelRect, drawPixelCircle, drawPixelCrystal, drawGothicArch, drawOrnateCross, drawRoseWindow } from './pixelArtHelper';
 
 export class SpriteRenderer {
   // ================= SIR CAEL (DARK GOTHIC KNIGHT) =================
@@ -297,106 +297,195 @@ export class SpriteRenderer {
     const halfW = -Math.floor(e.width / 2);
     const halfH = -Math.floor(e.height / 2);
 
-    // --- 1. CORRUPTED KNIGHT: ASHEN INQUISITOR / FALLEN TEMPLAR (18x24) ---
-    if (e.type === EnemyType.CORRUPTED_KNIGHT) {
+    // --- 1. PENITENT GUARD / CORRUPTED KNIGHT: CEREMONIAL INQUISITOR (24x36) ---
+    if (e.type === EnemyType.PENITENT_GUARD || e.type === EnemyType.CORRUPTED_KNIGHT) {
       const walkFrame = Math.floor(time * 6) % 2;
       const isAttacking = e.state === 'attack';
 
-      // Heavy blackened greaves
-      drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH + 16, 3, walkFrame === 0 ? 8 : 6);
-      drawPixelRect(ctx, PALETTE.BLACK, halfW + 10, halfH + 16, 3, walkFrame === 1 ? 8 : 6);
+      // Heavy blackened greaves with brass poleyns
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + 20, 4, walkFrame === 0 ? 12 : 9);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 13, halfH + 20, 4, walkFrame === 1 ? 12 : 9);
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 5, halfH + 20, 4, 2);
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 13, halfH + 20, 4, 2);
 
-      // Fluted blackened steel plate cuirass
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 3, halfH + 7, 11, 10);
-      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 4, halfH + 8, 9, 2);
+      // Fluted blackened steel plate cuirass with 5-tone iron shading
+      drawPixelRect(ctx, PALETTE.IRON_DEEP_SHADOW, halfW + 4, halfH + 8, 14, 14);
+      drawPixelRect(ctx, PALETTE.IRON_SHADOW, halfW + 5, halfH + 9, 12, 12);
+      drawPixelRect(ctx, PALETTE.IRON_BASE, halfW + 6, halfH + 10, 8, 8);
+      drawPixelRect(ctx, PALETTE.IRON_HIGHLIGHT, halfW + 8, halfH + 9, 2, 7);
 
-      // Tattered ecclesiastical vestment in deep dried burgundy
-      drawPixelRect(ctx, PALETTE.BURGUNDY, halfW + 5, halfH + 10, 7, 6);
-      // Inverted broken sunburst relic in tarnished brass
-      drawPixelRect(ctx, PALETTE.AMBER_DARK, halfW + 7, halfH + 11, 3, 3);
-      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH + 12, 1, 1);
+      // Tattered ceremonial tabard in deep mourning burgundy
+      drawPixelRect(ctx, PALETTE.BURGUNDY, halfW + 7, halfH + 12, 8, 10);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, halfW + 9, halfH + 13, 4, 4); // Eldorian sun crest
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 10, halfH + 14, 2, 2);
 
-      // Pointed inquisitor barbute helm
-      drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH, 9, 7);
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 5, halfH + 1, 7, 2);
-      // Sinister narrow crimson-violet eye slit
-      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 7, halfH + 3, 4, 1);
-      drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 8, halfH + 3, 2, 1);
+      // Inquisitor barbute pointed helm with weeping crimson-cyan visor slit
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 6, halfH, 11, 9);
+      drawPixelRect(ctx, PALETTE.IRON_HIGHLIGHT, halfW + 8, halfH + 1, 7, 2);
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 9, halfH + 4, 5, 1);
+      drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 11, halfH + 4, 2, 1);
 
       // Serrated Ashen Flamberge / Executioner Blade
       if (isAttacking) {
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 13, halfH + 8, 12, 3);
-        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 15, halfH + 7, 10, 1);
-        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 17, halfH + 9, 4, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 16, halfH + 10, 16, 3);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 18, halfH + 9, 14, 1);
+        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 20, halfH + 11, 8, 1);
       } else {
-        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 12, halfH + 2, 3, 15);
-        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 13, halfH + 1, 1, 15);
-        drawPixelRect(ctx, PALETTE.BRASS, halfW + 10, halfH + 13, 7, 2);
+        drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 16, halfH + 3, 3, 20);
+        drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 17, halfH + 2, 1, 20);
+        drawPixelRect(ctx, PALETTE.BRASS, halfW + 14, halfH + 16, 8, 2);
       }
     }
-    // --- 2. SHADOW BEAST: GARGOYLE HOUND / GHOUL FIEND (22x14) ---
-    else if (e.type === EnemyType.SHADOW_BEAST) {
-      const prowlFrame = Math.floor(time * 8) % 2;
-
-      // Sinewy petrified stone flesh body
-      drawPixelRect(ctx, PALETTE.BLACK, halfW + 3, halfH + 3, 16, 7);
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 5, halfH + 4, 12, 5);
-
-      // Jagged gargoyle spine ridges & shoulder spires
-      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 6, halfH + 1, 3, 3);
-      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 11, halfH + 1, 3, 3);
-      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 7, halfH, 1, 2);
-
-      // Grotesque skull with fanged maw and glowing hollow eye
-      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 16, halfH + 2, 6, 6);
-      drawPixelRect(ctx, PALETTE.WHITE, halfW + 20, halfH + 6, 2, 2); // Fangs
-      drawPixelRect(ctx, PALETTE.AMBER, halfW + 18, halfH + 3, 2, 2); // Eye
-
-      // 4 Prowling stone taloned legs
-      if (prowlFrame === 0) {
-        drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH + 10, 3, 4);
-        drawPixelRect(ctx, PALETTE.BLACK, halfW + 14, halfH + 10, 3, 4);
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 3, halfH + 13, 2, 1);
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 13, halfH + 13, 2, 1);
-      } else {
-        drawPixelRect(ctx, PALETTE.BLACK, halfW + 2, halfH + 9, 3, 5);
-        drawPixelRect(ctx, PALETTE.BLACK, halfW + 16, halfH + 9, 3, 5);
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 1, halfH + 13, 2, 1);
-        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 15, halfH + 13, 2, 1);
-      }
-    }
-    // --- 3. FOREST WRAITH: SHROUDED WEEPING NUN / BELL WRAITH (18x24) ---
-    else if (e.type === EnemyType.FOREST_WRAITH) {
+    // --- 2. BELL WRAITH / FOREST WRAITH: SHROUDED FUNERARY ENTITY (22x32) ---
+    else if (e.type === EnemyType.BELL_WRAITH || e.type === EnemyType.FOREST_WRAITH) {
       const hoverBob = Math.floor(time * 4) % 2;
       const tatterFrame = Math.floor(time * 6) % 3;
 
       // Heavy mourning veil & funeral shroud in void violet and deep burgundy
-      drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 3, halfH + 2 + hoverBob, 12, 14);
-      drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 4, halfH + 4 + hoverBob, 10, 11);
+      drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 4, halfH + 2 + hoverBob, 14, 18);
+      drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 6, halfH + 4 + hoverBob, 11, 14);
 
       // Sunken hood cavity with veil lace
-      drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + 3 + hoverBob, 8, 6);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 7, halfH + 3 + hoverBob, 9, 8);
       // Twin weeping spectral eyes (pale eerie crypt green)
-      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 7, halfH + 5 + hoverBob, 2, 2);
-      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 10, halfH + 5 + hoverBob, 2, 2);
+      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 9, halfH + 6 + hoverBob, 2, 2);
+      drawPixelRect(ctx, PALETTE.BRIGHT_GREEN, halfW + 13, halfH + 6 + hoverBob, 2, 2);
+
+      // Hanging brass sanctuary bells along the shroud hem
+      const bellSwing = Math.floor(Math.sin(time * 8) * 2);
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 4, halfH + 20 + hoverBob, 3, 4);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 5, halfH + 23 + hoverBob, 1, 2);
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 15 + bellSwing, halfH + 20 + hoverBob, 3, 4);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 16 + bellSwing, halfH + 23 + hoverBob, 1, 2);
 
       // Tattered funeral shroud hems
       if (tatterFrame === 0) {
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 4, halfH + 16 + hoverBob, 3, 5);
-        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 9, halfH + 16 + hoverBob, 4, 7);
+        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 5, halfH + 20 + hoverBob, 4, 8);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 11, halfH + 20 + hoverBob, 5, 10);
       } else if (tatterFrame === 1) {
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 5, halfH + 16 + hoverBob, 4, 6);
-        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 11, halfH + 16 + hoverBob, 3, 5);
+        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 6, halfH + 20 + hoverBob, 5, 9);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 13, halfH + 20 + hoverBob, 4, 7);
       } else {
-        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 3, halfH + 16 + hoverBob, 4, 7);
-        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 8, halfH + 16 + hoverBob, 4, 5);
+        drawPixelRect(ctx, PALETTE.VOID_PURPLE, halfW + 4, halfH + 20 + hoverBob, 5, 10);
+        drawPixelRect(ctx, PALETTE.DEEP_MAROON, halfW + 10, halfH + 20 + hoverBob, 5, 8);
       }
 
       // Ornate Brass Censer hanging from iron chain, emitting eerie crypt flame
-      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 16, halfH + 6 + hoverBob, 1, 5); // Chain
-      drawPixelRect(ctx, PALETTE.BRASS, halfW + 15, halfH + 11 + hoverBob, 4, 4); // Censer body
-      // Spectral soul-flame crystal rising from censer
-      drawPixelCrystal(ctx, halfW + 17, halfH + 9 + hoverBob, 5, 6, PALETTE.BRIGHT_GREEN, PALETTE.MINT_GREEN, PALETTE.DARK_PINE);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 18, halfH + 8 + hoverBob, 1, 7); // Chain
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 17, halfH + 15 + hoverBob, 5, 5); // Censer body
+      drawPixelCrystal(ctx, halfW + 19, halfH + 13 + hoverBob, 5, 7, PALETTE.BRIGHT_GREEN, PALETTE.MINT_GREEN, PALETTE.DARK_PINE);
+    }
+    // --- 3. ASHEN MONK: OCCULT ASCETIC (20x32) ---
+    else if (e.type === EnemyType.ASHEN_MONK) {
+      const chantBob = Math.floor(time * 5) % 2;
+
+      // Weathered coarse hemp robe in ash brown and deep charcoal
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 4, halfH + 6 + chantBob, 12, 20);
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 5, halfH + 8 + chantBob, 10, 16);
+
+      // Wooden rosary beads draped around neck
+      drawPixelRect(ctx, PALETTE.AMBER_DARK, halfW + 6, halfH + 10 + chantBob, 8, 2);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 9, halfH + 12 + chantBob, 2, 4); // Small cross pendant
+
+      // Cowled cowl hood with ash-marked face
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + chantBob, 10, 8);
+      drawPixelRect(ctx, PALETTE.BONE_BASE, halfW + 7, halfH + 3 + chantBob, 6, 5); // Ash face
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH + 4 + chantBob, 4, 1); // Red painted eye stripe
+
+      // Skeletal hands channeling corrupted crimson rune circle
+      drawPixelRect(ctx, PALETTE.BONE_HIGHLIGHT, halfW + 14, halfH + 12 + chantBob, 3, 3);
+      if (e.state === 'attack' || chantBob === 1) {
+        drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 17, halfH + 10 + chantBob, 5, 5);
+        drawPixelRect(ctx, PALETTE.MAGENTA, halfW + 18, halfH + 11 + chantBob, 3, 3);
+        drawPixelRect(ctx, PALETTE.WHITE, halfW + 19, halfH + 12 + chantBob, 1, 1);
+      }
+    }
+    // --- 4. HOLLOW SAINT: TOWERING ANIMATED WEEPING STATUE (32x54) ---
+    else if (e.type === EnemyType.HOLLOW_SAINT) {
+      const stepFrame = Math.floor(time * 2) % 2;
+
+      // Carved stone plinth pedestal feet
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 6, halfH + 42, 8, stepFrame === 0 ? 10 : 8);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 18, halfH + 42, 8, stepFrame === 1 ? 10 : 8);
+      drawPixelRect(ctx, PALETTE.BONE_SHADOW, halfW + 7, halfH + 43, 6, 2);
+      drawPixelRect(ctx, PALETTE.BONE_SHADOW, halfW + 19, halfH + 43, 6, 2);
+
+      // Flowing carved marble ecclesiastical robes
+      drawPixelRect(ctx, PALETTE.BONE_DEEP_SHADOW, halfW + 4, halfH + 16, 24, 28);
+      drawPixelRect(ctx, PALETTE.BONE_SHADOW, halfW + 6, halfH + 18, 20, 24);
+      drawPixelRect(ctx, PALETTE.BONE_BASE, halfW + 8, halfH + 20, 15, 20);
+      drawPixelRect(ctx, PALETTE.BONE_HIGHLIGHT, halfW + 10, halfH + 22, 4, 16);
+
+      // Weeping hooded cowl with stone tears
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 9, halfH + 4, 14, 14);
+      drawPixelRect(ctx, PALETTE.BONE_BASE, halfW + 11, halfH + 6, 10, 10);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 13, halfH + 8, 2, 5); // Weeping eye tracks
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 17, halfH + 8, 2, 5);
+
+      // Stone circular halo ring behind head
+      drawPixelCircle(ctx, PALETTE.PALE_GOLD, halfW + 16, halfH + 8, 12);
+      drawPixelCircle(ctx, PALETTE.BLACK, halfW + 16, halfH + 8, 10);
+
+      // Heavy Reliquary Staff topped with a golden reliquary sunburst
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 27, halfH + 2, 3, 50);
+      drawPixelRect(ctx, PALETTE.GOLD, halfW + 24, halfH, 9, 8);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, halfW + 26, halfH + 2, 5, 4);
+      drawPixelRect(ctx, PALETTE.WHITE, halfW + 28, halfH + 3, 1, 2);
+    }
+    // --- 5. CATHEDRAL BEAST / SHADOW BEAST: GARGOYLE FIEND (28x18) ---
+    else if (e.type === EnemyType.CATHEDRAL_BEAST || e.type === EnemyType.SHADOW_BEAST) {
+      const prowlFrame = Math.floor(time * 8) % 2;
+
+      // Sinewy petrified stone flesh body with rough pixel clusters
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 4, halfH + 4, 20, 9);
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 6, halfH + 5, 16, 7);
+
+      // Jagged gargoyle spine ridges & shoulder spires
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 8, halfH + 1, 4, 4);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 14, halfH + 1, 4, 4);
+      drawPixelRect(ctx, PALETTE.LIGHT_GRAY, halfW + 9, halfH, 2, 2);
+
+      // Grotesque horned gargoyle skull with fangs
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, halfW + 20, halfH + 2, 8, 8);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 22, halfH - 3, 3, 6); // Horns
+      drawPixelRect(ctx, PALETTE.WHITE, halfW + 25, halfH + 7, 2, 2); // Fangs
+      drawPixelRect(ctx, PALETTE.AMBER, halfW + 23, halfH + 4, 2, 2); // Glowing eye
+
+      // Prowling stone taloned legs
+      if (prowlFrame === 0) {
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + 12, 4, 5);
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 18, halfH + 12, 4, 5);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 4, halfH + 16, 3, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 17, halfH + 16, 3, 1);
+      } else {
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 3, halfH + 11, 4, 6);
+        drawPixelRect(ctx, PALETTE.BLACK, halfW + 20, halfH + 11, 4, 6);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 2, halfH + 16, 3, 1);
+        drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 19, halfH + 16, 3, 1);
+      }
+    }
+    // --- 6. BLOODBOUND KNIGHT: HEAVY EXECUTIONER (26x38) ---
+    else if (e.type === EnemyType.BLOODBOUND_KNIGHT) {
+      const walkFrame = Math.floor(time * 5) % 2;
+
+      // Heavy fluted iron greaves
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 5, halfH + 22, 5, walkFrame === 0 ? 14 : 11);
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 15, halfH + 22, 5, walkFrame === 1 ? 14 : 11);
+
+      // Spiked brass & iron plate cuirass
+      drawPixelRect(ctx, PALETTE.DARK_GRAY, halfW + 4, halfH + 9, 17, 15);
+      drawPixelRect(ctx, PALETTE.BRASS, halfW + 6, halfH + 11, 13, 11);
+      drawPixelRect(ctx, PALETTE.CRIMSON, halfW + 8, halfH + 13, 9, 4); // Blood stains
+
+      // Heavy great helm with narrow cross-slit visor
+      drawPixelRect(ctx, PALETTE.BLACK, halfW + 6, halfH + 1, 13, 9);
+      drawPixelRect(ctx, PALETTE.IRON_HIGHLIGHT, halfW + 8, halfH + 2, 9, 3);
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 10, halfH + 5, 6, 1);
+
+      // Gargantuan Blood-Grooved Executioner Cleaver
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, halfW + 20, halfH + 8, 3, 26);
+      drawPixelRect(ctx, PALETTE.MID_GRAY, halfW + 18, halfH - 6, 7, 28);
+      drawPixelRect(ctx, PALETTE.ARTERIAL_RED, halfW + 19, halfH - 4, 2, 24); // Blood fuller
     }
     // --- 4. HOLLOW ARCHER: PENITENT CROSSBOWMAN (16x24) ---
     else if (e.type === EnemyType.HOLLOW_ARCHER) {

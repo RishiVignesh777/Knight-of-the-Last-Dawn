@@ -1,6 +1,6 @@
 import { AreaId } from '../types';
 import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from './constants';
-import { PALETTE, drawPixelRect, drawDitheredSky, drawPixelCircle, drawPixelCrystal, drawGothicArch, drawRoseWindow, drawOrnateCross } from './pixelArtHelper';
+import { PALETTE, drawPixelRect, drawDitheredSky, drawPixelCircle, drawPixelCrystal, drawGothicArch, drawRoseWindow, drawOrnateCross, draw16BitWaterReflection, draw16BitPillar, draw16BitChain, draw16BitCandleCluster, draw16BitStatue } from './pixelArtHelper';
 
 export class ParallaxRenderer {
   private birdTimer: number = 0;
@@ -43,6 +43,9 @@ export class ParallaxRenderer {
         break;
       case AreaId.CAPITAL:
         this.renderCapitalBackground(ctx, cameraX, cameraY);
+        break;
+      case AreaId.CATHEDRAL:
+        this.renderCathedralBackground(ctx, cameraX, cameraY);
         break;
       case AreaId.TOWER:
         this.renderTowerBackground(ctx, cameraX, cameraY);
@@ -103,6 +106,20 @@ export class ParallaxRenderer {
           drawPixelRect(ctx, PALETTE.BLACK, drawX - 6, VIRTUAL_HEIGHT - 28, 6, 8);
           drawPixelRect(ctx, PALETTE.BLACK, drawX - 9, VIRTUAL_HEIGHT - 26, 4, 3);
         }
+      }
+    } else if (areaId === AreaId.CATHEDRAL) {
+      // Ornate wrought-iron chancel railings & hanging chain links
+      for (let x = -20; x < VIRTUAL_WIDTH + 60; x += 54) {
+        const drawX = Math.floor(x + fgOffsetX);
+        // Hanging chain
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 12, 0, 3, 38);
+        drawPixelRect(ctx, PALETTE.IRON_HIGHLIGHT, drawX + 13, 0, 1, 38);
+        // Foreground altar railing with cross tips
+        drawPixelRect(ctx, PALETTE.BLACK, drawX, VIRTUAL_HEIGHT - 20, 50, 3);
+        drawPixelRect(ctx, PALETTE.BRASS, drawX, VIRTUAL_HEIGHT - 19, 50, 1);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 4, VIRTUAL_HEIGHT - 24, 4, 24);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 25, VIRTUAL_HEIGHT - 24, 4, 24);
+        drawPixelRect(ctx, PALETTE.BLACK, drawX + 46, VIRTUAL_HEIGHT - 24, 4, 24);
       }
     } else if (areaId === AreaId.TOWER) {
       // Sacred floating golden relic motes / prayer embers
@@ -294,22 +311,20 @@ export class ParallaxRenderer {
       drawPixelRect(ctx, PALETTE.BLACK, cx + 45, 75, 65, VIRTUAL_HEIGHT);
     }
 
-    // 5. Vast Dark Water Horizon (at y = 108)
-    const waterY = Math.floor(108 - camY * 0.08);
-    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.DARK_NAVY, 0, waterY, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - waterY, 16);
+    // 5. Vast Dark Water Horizon (at y = 120) with 16-Bit Hand-Crafted Shimmering Reflection
+    const waterY = Math.floor(120 - camY * 0.08);
+    draw16BitWaterReflection(
+      ctx,
+      0,
+      waterY,
+      VIRTUAL_WIDTH,
+      VIRTUAL_HEIGHT - waterY,
+      this.waterAnimTimer,
+      PALETTE.ICE_WHITE,
+      PALETTE.MIDNIGHT_BLUE
+    );
 
-    // 6. Dynamic Shimmering Pale Moonlight Reflection across the water
-    const reflX = moonX;
-    for (let y = waterY; y < VIRTUAL_HEIGHT; y += 3) {
-      const dist = y - waterY;
-      const spread = Math.floor(dist * 0.32);
-      const ripple = Math.floor(Math.sin(this.waterAnimTimer + y * 0.3) * 4);
-      const rw = Math.max(4, 14 + spread + ripple);
-      const reflColor = (y % 6 === 0) ? PALETTE.ICE_WHITE : PALETTE.CYAN_HIGHLIGHT;
-      drawPixelRect(ctx, reflColor, Math.floor(reflX - rw / 2 + ripple), y, rw, 1);
-    }
-
-    // 7. Drowned Gothic Cathedral Spire rising from the black mere (parallax 0.28)
+    // 6. Drowned Gothic Cathedral Spire rising from the black mere (parallax 0.28)
     const towerX = Math.floor(220 - (camX * 0.28));
     drawGothicArch(ctx, towerX - 6, waterY - 50, 36, 52, PALETTE.BLACK, PALETTE.DARKEST_GRAY, 4);
     // Cross finial at top of drowned spire
@@ -377,7 +392,97 @@ export class ParallaxRenderer {
     drawPixelRect(ctx, PALETTE.BRASS, flagX + 8, 114, 6, 6); // Broken sun crest
   }
 
-  // ================= AREA 5: THE TOWER OF DAWN (SANCTUM OF THE FIRST DAWN) =================
+  // ================= AREA 5: THE CATHEDRAL OF SILENCE (NAVE OF THE BROKEN SAINTS) =================
+  private renderCathedralBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
+    // 1. High Vaulted Ceiling Cavity (Black -> Void Purple -> Darkest Gray)
+    drawDitheredSky(ctx, PALETTE.BLACK, PALETTE.VOID_PURPLE, 0, 0, VIRTUAL_WIDTH, 50, 16);
+    drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.DARKEST_GRAY, 0, 50, VIRTUAL_WIDTH, 60, 16);
+    drawDitheredSky(ctx, PALETTE.DARKEST_GRAY, PALETTE.DARK_GRAY, 0, 110, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - 110, 16);
+
+    // 2. High Ribbed Vault Spires (overhead stone groin vaulting)
+    const ribStep = 72;
+    for (let x = -ribStep; x < VIRTUAL_WIDTH + ribStep * 2; x += ribStep) {
+      const rx = Math.floor(x - (camX * 0.12) % ribStep);
+      // Gothic pointed vault arches
+      drawPixelRect(ctx, PALETTE.BONE_DEEP_SHADOW, rx, 0, 4, 38);
+      drawPixelRect(ctx, PALETTE.BONE_SHADOW, rx + 1, 0, 2, 38);
+      // Diagonal groin vault ribs meeting at keystone
+      drawPixelRect(ctx, PALETTE.BONE_DEEP_SHADOW, rx - 32, 0, 36, 4);
+      drawPixelRect(ctx, PALETTE.BONE_DEEP_SHADOW, rx + 4, 0, 36, 4);
+      // Keystone pendant
+      drawPixelRect(ctx, PALETTE.GOLD, rx - 1, 38, 6, 6);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx, 40, 4, 2);
+    }
+
+    // 3. Colossal Stained-Glass Rose Window on the Nave High Wall (parallax 0.08)
+    const roseX = Math.floor(VIRTUAL_WIDTH * 0.5 - (camX * 0.08));
+    const roseY = Math.floor(62 - (camY * 0.05));
+    drawRoseWindow(ctx, roseX, roseY, 26, PALETTE.BLACK, PALETTE.CRIMSON, PALETTE.SUN_YELLOW);
+    // Holy stained glass illumination beams casting down into the nave
+    const rayPulse = Math.sin(this.birdTimer * 2) * 0.15;
+    ctx.save();
+    ctx.fillStyle = `rgba(220, 160, 60, ${0.12 + rayPulse})`;
+    ctx.beginPath();
+    ctx.moveTo(roseX - 18, roseY + 16);
+    ctx.lineTo(roseX + 18, roseY + 16);
+    ctx.lineTo(roseX + 90, VIRTUAL_HEIGHT);
+    ctx.lineTo(roseX - 90, VIRTUAL_HEIGHT);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 4. Triforium Clerestory Arcade (Two tiers of gothic lancet arches on rear wall, parallax 0.22)
+    const arcadeStep = 64;
+    const arcX = Math.floor(-(camX * 0.22)) % arcadeStep;
+    for (let x = -arcadeStep; x < VIRTUAL_WIDTH + arcadeStep * 2; x += arcadeStep) {
+      const ax = x + arcX;
+      // Upper clerestory lancet pair
+      drawGothicArch(ctx, ax, 70, 12, 34, PALETTE.BLACK, PALETTE.BONE_SHADOW, 2);
+      drawGothicArch(ctx, ax + 16, 70, 12, 34, PALETTE.BLACK, PALETTE.BONE_SHADOW, 2);
+      // Lower triforium gallery arch
+      drawGothicArch(ctx, ax - 4, 110, 36, 42, PALETTE.BLACK, PALETTE.BONE_DEEP_SHADOW, 3);
+    }
+
+    // 5. Hanging Heavy Iron Chains & Chandelier Candelabras (parallax 0.35)
+    for (let c = 0; c < 4; c++) {
+      const chX = Math.floor((c * 110 - camX * 0.35 + VIRTUAL_WIDTH * 2) % (VIRTUAL_WIDTH + 80));
+      // Iron chain link down from ceiling
+      draw16BitChain(ctx, chX, 0, 72);
+      // Chandelier hoop ring
+      drawPixelRect(ctx, PALETTE.BLACK, chX - 16, 72, 35, 3);
+      drawPixelRect(ctx, PALETTE.BRASS, chX - 15, 73, 33, 1);
+      // Candles on hoop
+      draw16BitCandleCluster(ctx, chX - 14, 72, this.birdTimer + c);
+      draw16BitCandleCluster(ctx, chX + 6, 72, this.birdTimer + c + 1);
+    }
+
+    // 6. Colossal Ribbed Cathedral Piers (Columns) in Midground (parallax 0.48)
+    const pillarStep = 150;
+    const pilX = Math.floor(-(camX * 0.48)) % pillarStep;
+    for (let p = -pillarStep; p < VIRTUAL_WIDTH + pillarStep; p += pillarStep) {
+      const px = p + pilX;
+      draw16BitPillar(ctx, px, 35, 18, VIRTUAL_HEIGHT - 35);
+      // Weeping Saint Statue placed in niche on pillar base
+      draw16BitStatue(ctx, px + 22, VIRTUAL_HEIGHT - 74, 56);
+    }
+
+    // 7. Broken Wooden Pews & Candlestand Shrines along Nave Floor (parallax 0.65)
+    const pewStep = 70;
+    const pewX = Math.floor(-(camX * 0.65)) % pewStep;
+    for (let b = -pewStep; b < VIRTUAL_WIDTH + pewStep; b += pewStep) {
+      const bx = b + pewX;
+      // Carved dark oak pew
+      drawPixelRect(ctx, PALETTE.DEEP_BROWN, bx, VIRTUAL_HEIGHT - 38, 38, 16);
+      drawPixelRect(ctx, PALETTE.RUST, bx + 2, VIRTUAL_HEIGHT - 36, 34, 3);
+      drawPixelRect(ctx, PALETTE.BLACK, bx, VIRTUAL_HEIGHT - 44, 4, 22); // Pew bench side end
+      // Beeswax candle cluster resting on floor
+      if (b % (pewStep * 2) === 0) {
+        draw16BitCandleCluster(ctx, bx + 42, VIRTUAL_HEIGHT - 24, this.birdTimer + b);
+      }
+    }
+  }
+
+  // ================= AREA 6: THE TOWER OF DAWN (SANCTUM OF THE FIRST DAWN) =================
   private renderTowerBackground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
     // 1. Radiant Dawn Dithered Sky (Mourning Violet -> Deep Burgundy -> Sacred Amber -> Holy Dawn Gold)
     drawDitheredSky(ctx, PALETTE.VOID_PURPLE, PALETTE.BURGUNDY, 0, 0, VIRTUAL_WIDTH, 45, 14);

@@ -16,6 +16,7 @@ export enum AreaId {
   FOREST = 'FOREST',
   LAKE = 'LAKE',
   CAPITAL = 'CAPITAL',
+  CATHEDRAL = 'CATHEDRAL',
   TOWER = 'TOWER'
 }
 
@@ -41,6 +42,13 @@ export enum Direction {
 }
 
 export enum EnemyType {
+  PENITENT_GUARD = 'PENITENT_GUARD',
+  BELL_WRAITH = 'BELL_WRAITH',
+  ASHEN_MONK = 'ASHEN_MONK',
+  CATHEDRAL_BEAST = 'CATHEDRAL_BEAST',
+  HOLLOW_SAINT = 'HOLLOW_SAINT',
+  BLOODBOUND_KNIGHT = 'BLOODBOUND_KNIGHT',
+  // Backward-compatible aliases
   CORRUPTED_KNIGHT = 'CORRUPTED_KNIGHT',
   SHADOW_BEAST = 'SHADOW_BEAST',
   FOREST_WRAITH = 'FOREST_WRAITH',
@@ -212,7 +220,7 @@ export interface AreaData {
   spawnX: number;
   spawnY: number;
   ambientLight: string; // e.g., 'rgba(20, 10, 30, 0.4)'
-  weather: 'sunset_dust' | 'forest_fog' | 'lake_mist' | 'storm_rain' | 'dawn_rays';
+  weather: 'sunset_dust' | 'forest_fog' | 'lake_mist' | 'storm_rain' | 'cathedral_haze' | 'dawn_rays';
   platforms: Platform[];
   enemies: Omit<Enemy, 'vx' | 'vy' | 'animTimer' | 'actionTimer' | 'invincibleTimer' | 'isGrounded'>[];
   npcs: NPCData[];

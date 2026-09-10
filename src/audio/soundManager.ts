@@ -94,6 +94,9 @@ class SoundManager {
       case AreaId.CAPITAL:
         this.startCapitalMusic();
         break;
+      case AreaId.CATHEDRAL:
+        this.startCathedralMusic();
+        break;
       case AreaId.TOWER:
         this.startTowerMusic();
         break;
@@ -247,6 +250,33 @@ class SoundManager {
     };
     loop();
     this.musicInterval = window.setInterval(loop, 2400);
+  }
+
+  private startCathedralMusic() {
+    // Cathedral of Silence - Solemn gothic pipe organ pads, deep pedal bass & echoing funeral bell
+    const organChords = [
+      [110.00, 164.81, 220.00, 261.63], // A minor pipe organ
+      [98.00, 146.83, 196.00, 246.94],  // G major pedal
+      [87.31, 130.81, 174.61, 220.00],  // F major solemn
+      [82.41, 123.47, 164.81, 207.65]   // E dominant minor
+    ];
+    let step = 0;
+    const loop = () => {
+      const chord = organChords[step % organChords.length];
+      // Pipe organ dual oscillators
+      chord.forEach((freq, i) => {
+        this.playTone(freq, 3.4, 'triangle', 0.07, i * 0.05);
+        this.playTone(freq * 2, 3.0, 'sine', 0.03, i * 0.05);
+      });
+      // Distant solemn gothic sanctuary bell chime
+      if (step % 2 === 0) {
+        this.playTone(440, 2.8, 'sine', 0.06, 0.4);
+        this.playTone(880, 1.8, 'triangle', 0.03, 0.4);
+      }
+      step++;
+    };
+    loop();
+    this.musicInterval = window.setInterval(loop, 3000);
   }
 
   private startTowerMusic() {

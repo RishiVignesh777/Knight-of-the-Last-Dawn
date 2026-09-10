@@ -590,16 +590,16 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
         targetY: 290
       },
       {
-        id: 'door_to_tower',
+        id: 'door_to_cathedral',
         type: 'door',
         x: 1720,
         y: 340,
         width: 44,
         height: 48,
-        prompt: 'Ascend to The Tower of Dawn (E)',
-        targetArea: AreaId.TOWER,
-        targetX: 70,
-        targetY: 590
+        prompt: 'Enter Cathedral of Silence (E)',
+        targetArea: AreaId.CATHEDRAL,
+        targetX: 60,
+        targetY: 470
       }
     ],
     memoryShards: [
@@ -622,12 +622,173 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
     ]
   },
 
+  [AreaId.CATHEDRAL]: {
+    id: AreaId.CATHEDRAL,
+    name: 'Cathedral of Silence',
+    subtitle: 'Nave of the Weeping Saints & Rose of Lead',
+    width: 1800,
+    height: 560,
+    spawnX: 60,
+    spawnY: 470,
+    ambientLight: 'rgba(20, 10, 28, 0.46)',
+    weather: 'cathedral_haze',
+    platforms: [
+      // Monumental flagstone nave floor
+      { x: 0, y: 500, width: 600, height: 60, type: 'solid', theme: 'cathedral_flagstone' },
+      { x: 670, y: 500, width: 500, height: 60, type: 'solid', theme: 'cathedral_flagstone' },
+      { x: 1240, y: 500, width: 560, height: 60, type: 'solid', theme: 'cathedral_flagstone' },
+      // Crypt pit hazards with holy spiked railings
+      { x: 600, y: 530, width: 70, height: 30, type: 'hazard', theme: 'spikes' },
+      { x: 1170, y: 530, width: 70, height: 30, type: 'hazard', theme: 'spikes' },
+      // Organ loft & choir triforium galleries
+      { x: 160, y: 420, width: 130, height: 16, type: 'one_way', theme: 'carved_oak' },
+      { x: 340, y: 340, width: 140, height: 16, type: 'one_way', theme: 'carved_oak' },
+      { x: 420, y: 340, width: 22, height: 160, type: 'ladder', theme: 'ladder' },
+      // Central high altar dais
+      { x: 740, y: 420, width: 180, height: 16, type: 'solid', theme: 'altar_marble' },
+      { x: 970, y: 360, width: 140, height: 16, type: 'one_way', theme: 'carved_oak' },
+      { x: 1160, y: 300, width: 150, height: 16, type: 'solid', theme: 'cathedral_pier' },
+      { x: 1180, y: 300, width: 22, height: 200, type: 'ladder', theme: 'ladder' },
+      // High clerestory walkway beneath the giant rose window
+      { x: 1350, y: 370, width: 140, height: 16, type: 'one_way', theme: 'carved_oak' },
+      { x: 1530, y: 310, width: 160, height: 16, type: 'solid', theme: 'cathedral_pier' }
+    ],
+    enemies: [
+      {
+        id: 'cath_guard_1',
+        type: EnemyType.PENITENT_GUARD,
+        x: 380,
+        y: 450,
+        width: 24,
+        height: 36,
+        facing: 1,
+        hp: 95,
+        maxHp: 95,
+        state: 'patrol',
+        attackCooldown: 0.8,
+        patrolMinX: 200,
+        patrolMaxX: 520
+      },
+      {
+        id: 'cath_wraith_1',
+        type: EnemyType.BELL_WRAITH,
+        x: 820,
+        y: 350,
+        width: 22,
+        height: 32,
+        facing: -1,
+        hp: 65,
+        maxHp: 65,
+        state: 'patrol',
+        attackCooldown: 1.4,
+        patrolMinX: 740,
+        patrolMaxX: 950
+      },
+      {
+        id: 'cath_saint_1',
+        type: EnemyType.HOLLOW_SAINT,
+        x: 1350,
+        y: 430,
+        width: 32,
+        height: 54,
+        facing: -1,
+        hp: 160,
+        maxHp: 160,
+        state: 'patrol',
+        attackCooldown: 1.2,
+        patrolMinX: 1250,
+        patrolMaxX: 1520
+      },
+      {
+        id: 'cath_monk_1',
+        type: EnemyType.ASHEN_MONK,
+        x: 1020,
+        y: 320,
+        width: 20,
+        height: 32,
+        facing: 1,
+        hp: 55,
+        maxHp: 55,
+        state: 'idle',
+        attackCooldown: 1.5,
+        patrolMinX: 980,
+        patrolMaxX: 1100
+      }
+    ],
+    npcs: [],
+    landmarks: [
+      {
+        id: 'shrine_cathedral',
+        type: 'shrine',
+        x: 80,
+        y: 468,
+        width: 32,
+        height: 32,
+        prompt: 'Rest at Saint Reliquary Shrine (E)',
+        text: 'The solemn scent of myrrh and beeswax lingers in the vaulted silence. The light of Dawn preserves you.'
+      },
+      {
+        id: 'mural_cathedral',
+        type: 'mural',
+        x: 790,
+        y: 375,
+        width: 42,
+        height: 44,
+        prompt: 'Inspect High Altar Inscription (E)',
+        text: '"He who carries the blade must not weep when the vessel shatters. Only fire purges the blight."'
+      },
+      {
+        id: 'door_to_capital',
+        type: 'door',
+        x: 10,
+        y: 456,
+        width: 30,
+        height: 44,
+        prompt: 'Return to The Fallen Kingdom (E)',
+        targetArea: AreaId.CAPITAL,
+        targetX: 1680,
+        targetY: 340
+      },
+      {
+        id: 'door_to_tower',
+        type: 'door',
+        x: 1720,
+        y: 456,
+        width: 44,
+        height: 48,
+        prompt: 'Ascend to The Tower of Dawn (E)',
+        targetArea: AreaId.TOWER,
+        targetX: 70,
+        targetY: 600
+      }
+    ],
+    memoryShards: [
+      {
+        id: 'shard_cathedral',
+        title: 'The Litany of the Last Dawn',
+        areaId: AreaId.CATHEDRAL,
+        areaName: 'Cathedral of Silence',
+        x: 1590,
+        y: 270,
+        memoryText: 'The monks chanted as the King sealed the reliquary: "Should the Dawn fail, let the Penitent Knight bear the fire alone, though it burn away his flesh and remembrance."',
+        timestampHint: 'The Consecration of the Core'
+      }
+    ],
+    lights: [
+      { x: 80, y: 470, radius: 100, color: '#fcd34d', intensity: 0.9, flickerSpeed: 3, flickerOffset: 0.1 },
+      { x: 400, y: 330, radius: 85, color: '#f59e0b', intensity: 0.8, flickerSpeed: 4, flickerOffset: 0.7 },
+      { x: 800, y: 220, radius: 160, color: '#93c5fd', intensity: 0.85, flickerSpeed: 2, flickerOffset: 0.4 }, // Stained glass rose window light
+      { x: 1200, y: 480, radius: 80, color: '#f59e0b', intensity: 0.8, flickerSpeed: 5, flickerOffset: 0.2 },
+      { x: 1590, y: 270, radius: 95, color: '#fde047', intensity: 0.95, flickerSpeed: 3, flickerOffset: 0.5 }
+    ]
+  },
+
   [AreaId.TOWER]: {
     id: AreaId.TOWER,
     name: 'The Tower of Dawn',
     subtitle: 'High Spire Above the Shrouded Clouds',
-    width: 1500,
-    height: 680,
+    width: 1600,
+    height: 780,
     spawnX: 70,
     spawnY: 610,
     ambientLight: 'rgba(32, 16, 46, 0.38)',
@@ -690,8 +851,8 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
         width: 44,
         height: 68,
         facing: -1,
-        hp: 800,
-        maxHp: 800,
+        hp: 900,
+        maxHp: 900,
         state: 'idle',
         attackCooldown: 1.5,
         patrolMinX: 1060,
@@ -713,16 +874,16 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
         text: 'The air smells of ozone and morning light. The final dawn awaits above.'
       },
       {
-        id: 'door_to_capital',
+        id: 'door_to_cathedral',
         type: 'door',
         x: 10,
         y: 600,
         width: 30,
         height: 42,
-        prompt: 'Descend to The Fallen Kingdom (E)',
-        targetArea: AreaId.CAPITAL,
-        targetX: 1660,
-        targetY: 340
+        prompt: 'Descend to Cathedral of Silence (E)',
+        targetArea: AreaId.CATHEDRAL,
+        targetX: 1680,
+        targetY: 460
       }
     ],
     memoryShards: [
