@@ -5,6 +5,7 @@ export enum GameState {
   DIALOGUE = 'DIALOGUE',
   CINEMATIC = 'CINEMATIC',
   MEMORY_VIEW = 'MEMORY_VIEW',
+  BESTIARY = 'BESTIARY',
   BOSS_INTRO = 'BOSS_INTRO',
   ENDING_CHOICE = 'ENDING_CHOICE',
   ENDING_CUTSCENE = 'ENDING_CUTSCENE',
@@ -101,6 +102,7 @@ export interface PlayerStats {
   collectedShardsInArea: Record<string, boolean>;
   unlockedCheckpoints: string[];
   currentCheckpoint: { areaId: AreaId; x: number; y: number } | null;
+  discoveredEnemies: string[];
 }
 
 export interface Enemy {

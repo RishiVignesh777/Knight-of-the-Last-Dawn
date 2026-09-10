@@ -10,6 +10,7 @@ import { PauseMenu } from './components/PauseMenu';
 import { GameOverModal } from './components/GameOverModal';
 import { MainMenu } from './components/MainMenu';
 import { ControlsOverlay } from './components/ControlsOverlay';
+import { Bestiary } from './components/Bestiary';
 import { soundEngine } from './audio/soundManager';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
 
   const [crtEnabled, setCrtEnabled] = useState(false);
   const [hasSavedGame, setHasSavedGame] = useState(game.hasSave());
+  const [discoveryToast, setDiscoveryToast] = useState(game.bestiaryDiscoveryToast);
 
   // Input event listeners
   useEffect(() => {
@@ -41,12 +43,31 @@ export default function App() {
 
       if (e.code === 'Escape') {
         e.preventDefault();
+        if (game.state === GameState.BESTIARY) {
+          game.state = GameState.PLAYING;
+          setGameState(GameState.PLAYING);
+          soundEngine.playMenuBeep(false);
+          return;
+        }
         if (game.state === GameState.PLAYING) {
           game.state = GameState.PAUSED;
           setGameState(GameState.PAUSED);
         } else if (game.state === GameState.PAUSED) {
           game.state = GameState.PLAYING;
           setGameState(GameState.PLAYING);
+        }
+        return;
+      }
+
+      if (e.code === 'KeyB') {
+        if (game.state === GameState.PLAYING) {
+          game.state = GameState.BESTIARY;
+          setGameState(GameState.BESTIARY);
+          soundEngine.playMenuBeep(true);
+        } else if (game.state === GameState.BESTIARY) {
+          game.state = GameState.PLAYING;
+          setGameState(GameState.PLAYING);
+          soundEngine.playMenuBeep(false);
         }
         return;
       }
@@ -209,6 +230,7 @@ export default function App() {
         setActiveLandmark(game.activeLandmarkText);
         setEndingChoice(game.activeEndingChoice);
         setEpilogueStep(game.endingEpilogueStep);
+        setDiscoveryToast(game.bestiaryDiscoveryToast ? { ...game.bestiaryDiscoveryToast } : null);
       }
 
       animationFrameId = requestAnimationFrame(loop);
@@ -277,6 +299,18 @@ export default function App() {
     setActiveLandmark(null);
   };
 
+  const handleOpenBestiary = () => {
+    game.state = GameState.BESTIARY;
+    setGameState(GameState.BESTIARY);
+    soundEngine.playMenuBeep(true);
+  };
+
+  const handleCloseBestiary = () => {
+    game.state = GameState.PLAYING;
+    setGameState(GameState.PLAYING);
+    soundEngine.playMenuBeep(false);
+  };
+
   const handleSelectEnding = (choice: EndingType) => {
     game.chooseEnding(choice);
     setEndingChoice(choice);
@@ -323,6 +357,8 @@ export default function App() {
             player={game.player}
             currentAreaId={currentAreaId}
             bossEnemy={bossEnemy}
+            discoveryToast={discoveryToast}
+            onOpenBestiary={handleOpenBestiary}
           />
         )}
 
@@ -349,6 +385,14 @@ export default function App() {
               setGameState(GameState.PLAYING);
             }}
             onQuitToMenu={handleRestartToTitle}
+          />
+        )}
+
+        {/* Bestiary Codex Screen */}
+        {gameState === GameState.BESTIARY && (
+          <Bestiary
+            discoveredEnemyIds={game.player.discoveredEnemies || []}
+            onClose={handleCloseBestiary}
           />
         )}
 

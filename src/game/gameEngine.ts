@@ -42,6 +42,7 @@ import { spriteRenderer } from './spriteRenderer';
 import { parallaxEngine } from './parallaxBackgrounds';
 import { lightingEngine } from './lightingEngine';
 import { PALETTE, drawPixelRect } from './pixelArtHelper';
+import { getBestiaryEntry } from './bestiaryData';
 
 export class GameEngine {
   public state: GameState = GameState.MENU;
@@ -75,6 +76,11 @@ export class GameEngine {
 
   public bossDefeated: boolean = false;
   public bossEncountered: boolean = false;
+
+  public bestiaryDiscoveryToast: {
+    enemyName: string;
+    timer: number;
+  } | null = null;
 
   private gameTime: number = 0;
   private jumpBufferTimer: number = 0;
@@ -135,7 +141,8 @@ export class GameEngine {
       memoryShards: [],
       collectedShardsInArea: {},
       unlockedCheckpoints: ['shrine_village'],
-      currentCheckpoint: { areaId: AreaId.VILLAGE, x: 80, y: 280 }
+      currentCheckpoint: { areaId: AreaId.VILLAGE, x: 80, y: 280 },
+      discoveredEnemies: []
     };
   }
 
@@ -163,7 +170,8 @@ export class GameEngine {
         memoryShards: data.memoryShards || [],
         collectedShardsInArea: data.collectedShardsInArea || {},
         unlockedCheckpoints: data.unlockedCheckpoints || ['shrine_village'],
-        currentCheckpoint: data.currentCheckpoint || { areaId: AreaId.VILLAGE, x: 80, y: 280 }
+        currentCheckpoint: data.currentCheckpoint || { areaId: AreaId.VILLAGE, x: 80, y: 280 },
+        discoveredEnemies: data.discoveredEnemies || []
       };
       const cp = this.player.currentCheckpoint;
       if (cp) {
@@ -190,6 +198,7 @@ export class GameEngine {
         collectedShardsInArea: this.player.collectedShardsInArea,
         unlockedCheckpoints: this.player.unlockedCheckpoints,
         currentCheckpoint: this.player.currentCheckpoint,
+        discoveredEnemies: this.player.discoveredEnemies,
         currentAreaId: this.currentAreaId
       };
       localStorage.setItem('knight_last_dawn_save', JSON.stringify(data));
@@ -265,6 +274,13 @@ export class GameEngine {
       this.updateProjectiles(clampedDt);
       this.updateCamera(clampedDt);
       this.checkInteractables();
+    }
+
+    if (this.bestiaryDiscoveryToast) {
+      this.bestiaryDiscoveryToast.timer -= clampedDt;
+      if (this.bestiaryDiscoveryToast.timer <= 0) {
+        this.bestiaryDiscoveryToast = null;
+      }
     }
 
     // Update previous keys for edge detection
@@ -569,6 +585,7 @@ export class GameEngine {
         attackBox.y + attackBox.height > e.y
       ) {
         hitAny = true;
+        this.discoverEnemy(e.type);
         e.hp -= damage;
         e.invincibleTimer = 0.25;
         e.vx = p.facing * (isHeavy ? 180 : 90);
@@ -637,6 +654,31 @@ export class GameEngine {
     }
   }
 
+  public discoverEnemy(type: EnemyType | string) {
+    let canonical = type;
+    if (type === EnemyType.CORRUPTED_KNIGHT) canonical = EnemyType.PENITENT_GUARD;
+    if (type === EnemyType.SHADOW_BEAST) canonical = EnemyType.CATHEDRAL_BEAST;
+    if (type === EnemyType.FOREST_WRAITH) canonical = EnemyType.BELL_WRAITH;
+
+    if (!this.player.discoveredEnemies) {
+      this.player.discoveredEnemies = [];
+    }
+
+    if (!this.player.discoveredEnemies.includes(canonical)) {
+      this.player.discoveredEnemies.push(canonical);
+      this.saveGame();
+
+      const entry = getBestiaryEntry(canonical);
+      const name = entry ? entry.name : canonical;
+
+      this.bestiaryDiscoveryToast = {
+        enemyName: name,
+        timer: 4.5
+      };
+      soundEngine.playMenuBeep(true);
+    }
+  }
+
   // ================= ENEMY AI =================
   private updateEnemies(dt: number) {
     const p = this.player;
@@ -650,8 +692,13 @@ export class GameEngine {
       const distToPlayer = Math.hypot(p.x - e.x, p.y - e.y);
       const dirToPlayer = p.x > e.x ? 1 : -1;
 
+      if (distToPlayer < 360) {
+        this.discoverEnemy(e.type);
+      }
+
       // Special Boss AI (The Dying King)
       if (e.isBoss) {
+        this.discoverEnemy(EnemyType.DYING_KING);
         this.updateBoss(e, dt, distToPlayer, dirToPlayer);
         continue;
       }

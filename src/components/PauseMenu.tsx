@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { soundEngine } from '../audio/soundManager';
 import { PlayerStats, MemoryShard } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
+import { BESTIARY_ENTRIES, BestiaryEntry } from '../game/bestiaryData';
+import { BestiaryModal } from './BestiaryModal';
 
 interface PauseMenuProps {
   player: PlayerStats;
@@ -18,7 +20,8 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   onResume,
   onQuitToMenu
 }) => {
-  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'sound'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'sound'>('main');
+  const [inspectedEntry, setInspectedEntry] = useState<BestiaryEntry | null>(null);
   const [isMuted, setIsMuted] = useState(soundEngine.isSoundMuted());
   const [masterVol, setMasterVol] = useState(0.8);
   const [musicVol, setMusicVol] = useState(0.65);
@@ -71,6 +74,16 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               }`}
             >
               SHARDS ({player.memoryShards.length}/5)
+            </button>
+            <button
+              onClick={() => setActiveTab('bestiary')}
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'bestiary'
+                  ? 'bg-[#ecc25e] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
+              }`}
+            >
+              BESTIARY ({(player.discoveredEnemies || []).length}/9)
             </button>
             <button
               onClick={() => setActiveTab('controls')}
@@ -168,7 +181,66 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           </div>
         )}
 
-        {/* Tab 3: Controls Reference */}
+        {/* Tab 3: Bestiary Lore & Codex */}
+        {activeTab === 'bestiary' && (
+          <div className="max-h-64 overflow-y-auto pr-1 flex flex-col gap-2 py-1">
+            <div className="flex items-center justify-between text-[10px] text-[#909090] uppercase mb-1">
+              <span>DISCOVERED FOES: {(player.discoveredEnemies || []).length}/9</span>
+              <span className="text-[#ecc25e]">CLICK ENTRY TO VIEW 16-BIT PORTRAIT</span>
+            </div>
+            {BESTIARY_ENTRIES.map(entry => {
+              const unlocked =
+                (player.discoveredEnemies || []).includes(entry.id) ||
+                entry.aliases.some(a => (player.discoveredEnemies || []).includes(a));
+
+              return (
+                <div
+                  key={entry.id}
+                  onClick={() => {
+                    if (unlocked) {
+                      soundEngine.playMenuBeep(true);
+                      setInspectedEntry(entry);
+                    }
+                  }}
+                  className={`p-2 border-2 text-left transition ${
+                    unlocked
+                      ? 'bg-[#181818] hover:bg-[#251835] border-[#ecc25e] cursor-pointer'
+                      : 'bg-[#0b0714] border-[#303030] opacity-40 cursor-default'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs font-bold mb-0.5">
+                    <span className={unlocked ? 'text-[#f8f870]' : 'text-[#585858]'}>
+                      {unlocked ? entry.name : '??? UNKNOWN FIEND'}
+                    </span>
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.2 border uppercase"
+                      style={{
+                        borderColor: unlocked ? entry.threatColor : '#404040',
+                        color: unlocked ? entry.threatColor : '#606060'
+                      }}
+                    >
+                      {unlocked ? entry.threatLevel : 'UNKNOWN'}
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-[#88d8f8] mb-1">
+                    {unlocked ? `${entry.category} • ${entry.habitat}` : 'ENCOUNTER IN ELDORIA TO UNLOCK'}
+                  </div>
+                  <p className="text-[10px] text-[#c0c0c0] leading-relaxed line-clamp-2">
+                    {unlocked ? `"${entry.loreDescription}"` : 'This creature remains shrouded in the shadows of the Eclipse.'}
+                  </p>
+                  {unlocked && (
+                    <div className="mt-1.5 text-[9px] text-[#ecc25e] font-bold flex items-center justify-end gap-1">
+                      <span>OPEN CODEX PORTRAIT</span>
+                      <span>→</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Tab 4: Controls Reference */}
         {activeTab === 'controls' && (
           <div className="grid grid-cols-2 gap-2 text-[10px] py-1">
             <div className="bg-[#181818] p-2 border border-[#303030]">
@@ -262,6 +334,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             CLOSE [ESC]
           </button>
         </div>
+
+        {/* Bestiary Portrait & Lore Modal */}
+        {inspectedEntry && (
+          <BestiaryModal
+            entry={inspectedEntry}
+            onClose={() => setInspectedEntry(null)}
+          />
+        )}
       </div>
     </div>
   );

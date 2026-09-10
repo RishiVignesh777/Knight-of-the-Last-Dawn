@@ -6,9 +6,17 @@ interface HUDProps {
   player: PlayerStats;
   currentAreaId: AreaId;
   bossEnemy?: Enemy;
+  discoveryToast?: { enemyName: string; timer: number } | null;
+  onOpenBestiary?: () => void;
 }
 
-export const HUD: React.FC<HUDProps> = ({ player, currentAreaId, bossEnemy }) => {
+export const HUD: React.FC<HUDProps> = ({
+  player,
+  currentAreaId,
+  bossEnemy,
+  discoveryToast,
+  onOpenBestiary
+}) => {
   const currentArea = WORLD_AREAS[currentAreaId];
 
   // Segmented 8-bit Health: 5 hearts total (each represents 20 HP of 100 max HP)
@@ -115,13 +123,46 @@ export const HUD: React.FC<HUDProps> = ({ player, currentAreaId, bossEnemy }) =>
             </div>
           </div>
 
-          {/* 8-bit Shard Tracker */}
-          <div className="bg-[#0b0714] border-2 border-[#58a8f8] px-2.5 py-1 flex items-center gap-2 text-[#88d8f8] text-[10px] shadow-[2px_2px_0px_#000000]">
-            <div className="w-2 h-2 rotate-45 bg-[#88d8f8] border border-black" />
-            <span>SHARDS: {collectedCount}/{totalShards}</span>
+          <div className="flex items-center gap-2">
+            {/* 8-bit Bestiary Button */}
+            <button
+              onClick={onOpenBestiary}
+              className="pointer-events-auto bg-[#0b0714] hover:bg-[#1f1530] border-2 border-[#ecc25e] px-2.5 py-1 flex items-center gap-1.5 text-[#ecc25e] hover:text-[#f8f870] text-[10px] shadow-[2px_2px_0px_#000000] cursor-pointer transition"
+              title="Open Bestiary (B)"
+            >
+              <div className="w-2 h-2 rotate-45 bg-[#ecc25e] border border-black" />
+              <span>BESTIARY: {(player.discoveredEnemies || []).length}/9 [B]</span>
+            </button>
+
+            {/* 8-bit Shard Tracker */}
+            <div className="bg-[#0b0714] border-2 border-[#58a8f8] px-2.5 py-1 flex items-center gap-2 text-[#88d8f8] text-[10px] shadow-[2px_2px_0px_#000000]">
+              <div className="w-2 h-2 rotate-45 bg-[#88d8f8] border border-black" />
+              <span>SHARDS: {collectedCount}/{totalShards}</span>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Discovery Notification Toast Banner */}
+      {discoveryToast && (
+        <div
+          onClick={onOpenBestiary}
+          className="pointer-events-auto self-center bg-[#0b0714] border-2 border-[#ecc25e] px-4 py-2 flex items-center gap-3 shadow-[4px_4px_0px_#000000] animate-bounce cursor-pointer hover:bg-[#1a102a] z-40 transition"
+        >
+          <div className="w-3 h-3 rotate-45 bg-[#ecc25e] border border-black shadow-[0_0_6px_#f8a020]" />
+          <div className="flex flex-col text-left">
+            <span className="text-[#ecc25e] text-[9px] font-bold tracking-widest uppercase">
+              NEW BESTIARY ENTRY DISCOVERED
+            </span>
+            <span className="text-[#f8f870] text-xs font-extrabold uppercase">
+              {discoveryToast.enemyName}
+            </span>
+          </div>
+          <span className="text-[9px] bg-[#ecc25e] text-black font-extrabold px-2 py-0.5 uppercase tracking-wider ml-1">
+            VIEW [B]
+          </span>
+        </div>
+      )}
 
       {/* Boss Health Bar (When Final Boss is active) */}
       {bossEnemy && bossEnemy.state !== 'dead' && (
@@ -151,7 +192,7 @@ export const HUD: React.FC<HUDProps> = ({ player, currentAreaId, bossEnemy }) =>
 
       {/* Retro Bottom Info */}
       <div className="text-[9px] text-[#909090] flex justify-between tracking-wide">
-        <span className="hidden sm:inline">A/D:MOVE  SPACE:JUMP  SHIFT:DASH  J:SLASH  K:CLEAVE  L:BLOCK  E:ACTION</span>
+        <span className="hidden sm:inline">A/D:MOVE  SPACE:JUMP  SHIFT:DASH  J:SLASH  K:CLEAVE  L:BLOCK  E:ACTION  B:BESTIARY</span>
         <span className="ml-auto">ESC:PAUSE</span>
       </div>
     </div>
