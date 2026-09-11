@@ -174,7 +174,7 @@ export interface Particle {
   maxLife: number;
   color: string;
   size: number;
-  type: 'spark' | 'dust' | 'leaf' | 'rain' | 'firefly' | 'blood' | 'dawn' | 'slash_trail' | 'smoke' | 'shockwave';
+  type: 'spark' | 'dust' | 'leaf' | 'rain' | 'firefly' | 'blood' | 'dawn' | 'slash_trail' | 'smoke' | 'shockwave' | 'checkpoint_mote' | 'checkpoint_ring';
   alpha?: number;
 }
 

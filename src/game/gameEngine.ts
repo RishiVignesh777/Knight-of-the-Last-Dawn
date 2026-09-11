@@ -315,6 +315,18 @@ export class GameEngine {
       VIRTUAL_HEIGHT
     );
 
+    // Continuous ambient holy motes drifting from shrines / checkpoints in the current area
+    for (const lm of currentArea.landmarks) {
+      if (lm.type === 'shrine') {
+        const isCurrent = this.player.currentCheckpoint?.x === lm.x && 
+                          this.player.currentCheckpoint?.y === lm.y && 
+                          this.player.currentCheckpoint?.areaId === this.currentAreaId;
+        if (Math.random() < 0.35) {
+          particleEngine.spawnCheckpointAura(lm.x + lm.width / 2, lm.y + 10, isCurrent);
+        }
+      }
+    }
+
     if (this.state === GameState.PLAYING) {
       this.updatePlayer(clampedDt);
       this.updateEnemies(clampedDt);
@@ -1143,8 +1155,12 @@ export class GameEngine {
           if (!p.unlockedCheckpoints.includes(lm.id)) {
             p.unlockedCheckpoints.push(lm.id);
           }
+          // Holy consecration visual burst
+          particleEngine.spawnCheckpointActivation(lm.x + lm.width / 2, lm.y + 12);
+          this.camera.shake = Math.max(this.camera.shake, 4);
+
           soundEngine.playShrineRest();
-          this.activeLandmarkText = lm.text || 'Rested at Shrine.';
+          this.activeLandmarkText = `✦ SANCTUARY CONSECRATED ✦\n${lm.text || 'The light of Dawn preserves your soul. Vitality restored and checkpoint recorded.'}`;
           this.saveGame();
           this.unlockAchievement('PILGRIM_OF_ELDORIA');
           return;
@@ -1191,7 +1207,11 @@ export class GameEngine {
 
     // 3. Render Landmarks (Shrines, Doors, Murals)
     for (const lm of area.landmarks) {
-      spriteRenderer.renderLandmark(ctx, lm, camX, camY, this.gameTime);
+      const isCurrent = this.player.currentCheckpoint?.x === lm.x &&
+                        this.player.currentCheckpoint?.y === lm.y &&
+                        this.player.currentCheckpoint?.areaId === this.currentAreaId;
+      const isUnlocked = (this.player.unlockedCheckpoints || []).includes(lm.id);
+      spriteRenderer.renderLandmark(ctx, lm, camX, camY, this.gameTime, isCurrent, isUnlocked);
     }
 
     // 4. Render Memory Shards (if uncollected)
@@ -1258,6 +1278,35 @@ export class GameEngine {
         flickerSpeed: 3
       }
     ];
+
+    // Add radiant glowing light indicators for checkpoints / shrines
+    for (const lm of area.landmarks) {
+      if (lm.type === 'shrine') {
+        const isCurrent = this.player.currentCheckpoint?.x === lm.x &&
+                          this.player.currentCheckpoint?.y === lm.y &&
+                          this.player.currentCheckpoint?.areaId === this.currentAreaId;
+        // Warm ground sanctuary illumination pool
+        allLights.push({
+          x: lm.x + lm.width / 2,
+          y: lm.y + lm.height / 2,
+          radius: isCurrent ? 140 : 110,
+          color: isCurrent ? '#facc15' : '#f59e0b',
+          intensity: isCurrent ? 0.95 : 0.82,
+          flickerSpeed: 2.5,
+          flickerOffset: 0.2
+        });
+        // Vertical celestial beacon light (casts illumination upwards through the darkness)
+        allLights.push({
+          x: lm.x + lm.width / 2,
+          y: lm.y - 35,
+          radius: isCurrent ? 100 : 75,
+          color: isCurrent ? '#fef08a' : '#fbbf24',
+          intensity: isCurrent ? 0.9 : 0.75,
+          flickerSpeed: 3.5,
+          flickerOffset: 0.6
+        });
+      }
+    }
     lightingEngine.renderLights(ctx, area.ambientLight, allLights, camX, camY, this.gameTime);
 
     // 11. Render Foreground Parallax Elements (Layer 1)

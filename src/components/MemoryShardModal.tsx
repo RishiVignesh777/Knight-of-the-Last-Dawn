@@ -49,18 +49,31 @@ interface LandmarkModalProps {
 }
 
 export const LandmarkModal: React.FC<LandmarkModalProps> = ({ text, onClose }) => {
+  const isSanctuary = text.includes('SANCTUARY') || text.toLowerCase().includes('shrine');
+
   return (
-    <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4 z-40 select-none font-mono">
-      <div className="w-full max-w-md bg-[#0b0714] border-4 border-[#f8a020] p-4 shadow-[4px_4px_0px_#000000] text-center">
-        <p className="text-[#f8f870] text-xs sm:text-sm leading-relaxed my-3 px-2 tracking-wide uppercase">
+    <div className="absolute inset-0 bg-black/75 flex items-center justify-center p-4 z-40 select-none font-mono">
+      <div className={`w-full max-w-md bg-[#0b0714] border-4 ${isSanctuary ? 'border-[#f8f870] shadow-[0_0_20px_rgba(248,248,112,0.35)]' : 'border-[#f8a020]'} p-5 text-center`}>
+        {isSanctuary && (
+          <div className="mb-3 border-b-2 border-[#f8f870]/30 pb-2">
+            <div className="inline-block px-3 py-1 bg-[#f8f870] text-black font-extrabold text-[11px] tracking-widest uppercase mb-1">
+              ✦ SANCTUARY CONSECRATED ✦
+            </div>
+            <div className="text-[#a0a0a0] text-[10px] tracking-wider uppercase">
+              CHECKPOINT ANCHORED • SOUL PRESERVED • RESTORED
+            </div>
+          </div>
+        )}
+
+        <p className="text-[#f8f870] text-xs sm:text-sm leading-relaxed my-3 px-2 tracking-wide uppercase whitespace-pre-line">
           {text}
         </p>
 
         <button
           onClick={onClose}
-          className="mt-2 px-5 py-1.5 bg-[#f8a020] hover:bg-[#f8f870] text-black font-bold text-xs uppercase shadow-[2px_2px_0px_#000000] cursor-pointer"
+          className="mt-3 px-6 py-2 bg-[#f8a020] hover:bg-[#f8f870] text-black font-bold text-xs uppercase shadow-[2px_2px_0px_#000000] cursor-pointer tracking-wider"
         >
-          CONTINUE [E]
+          {isSanctuary ? 'ARISE [E]' : 'CONTINUE [E]'}
         </button>
       </div>
     </div>

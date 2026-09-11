@@ -31,6 +31,11 @@ export class ParticleSystem {
         p.vy = Math.cos(p.life * 2) * 10;
       } else if (p.type === 'shockwave') {
         p.size += 60 * dt;
+      } else if (p.type === 'checkpoint_mote') {
+        p.vx = Math.sin(p.life * 4) * 12;
+        p.vy -= 10 * dt;
+      } else if (p.type === 'checkpoint_ring') {
+        p.size += 55 * dt;
       }
     }
   }
@@ -108,6 +113,76 @@ export class ParticleSystem {
       size: 4,
       type: 'shockwave'
     });
+  }
+
+  // Continuous ambient holy motes drifting upward from shrine
+  public spawnCheckpointAura(x: number, y: number, isCurrent: boolean) {
+    const colors = isCurrent 
+      ? [PALETTE.SUN_YELLOW, PALETTE.PALE_GOLD, PALETTE.WHITE, PALETTE.GOLD]
+      : [PALETTE.GOLD, PALETTE.AMBER, PALETTE.SUN_YELLOW, PALETTE.CYAN_HIGHLIGHT];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    this.emit({
+      x: Math.floor(x + (Math.random() - 0.5) * 22),
+      y: Math.floor(y + (Math.random() - 0.5) * 6),
+      vx: (Math.random() - 0.5) * 14,
+      vy: -14 - Math.random() * 18,
+      life: 1.4 + Math.random() * 0.8,
+      maxLife: 2.2,
+      color,
+      size: Math.random() < 0.35 ? 3 : 2,
+      type: 'checkpoint_mote'
+    });
+  }
+
+  // Dramatic consecration burst when resting at a shrine
+  public spawnCheckpointActivation(x: number, y: number) {
+    // 1. Expanding sacred shockwave rings
+    for (let i = 0; i < 2; i++) {
+      this.emit({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        vx: 0,
+        vy: 0,
+        life: 0.35 + i * 0.15,
+        maxLife: 0.5,
+        color: i === 0 ? PALETTE.WHITE : PALETTE.SUN_YELLOW,
+        size: 6 + i * 4,
+        type: 'checkpoint_ring'
+      });
+    }
+
+    // 2. High-speed radiant holy sparks in 360 degrees
+    const sparkCount = 26;
+    for (let i = 0; i < sparkCount; i++) {
+      const angle = (i / sparkCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+      const speed = 45 + Math.random() * 105;
+      this.emit({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 16,
+        life: 0.3 + Math.random() * 0.3,
+        maxLife: 0.6,
+        color: i % 3 === 0 ? PALETTE.WHITE : i % 3 === 1 ? PALETTE.SUN_YELLOW : PALETTE.GOLD,
+        size: Math.random() < 0.4 ? 3 : 2,
+        type: 'checkpoint_mote'
+      });
+    }
+
+    // 3. Ascending column motes soaring skyward
+    for (let i = 0; i < 12; i++) {
+      this.emit({
+        x: Math.floor(x + (Math.random() - 0.5) * 16),
+        y: Math.floor(y - Math.random() * 8),
+        vx: (Math.random() - 0.5) * 18,
+        vy: -35 - Math.random() * 55,
+        life: 1.0 + Math.random() * 0.8,
+        maxLife: 1.8,
+        color: PALETTE.CANDLE_WHITE,
+        size: 3,
+        type: 'checkpoint_mote'
+      });
+    }
   }
 
   // 8-bit Dust puff
@@ -215,6 +290,26 @@ export class ParticleSystem {
         if (blink) {
           drawPixelRect(ctx, p.color, rx, ry, 2, 2);
         }
+      } else if (p.type === 'checkpoint_mote') {
+        // Glowing celestial mote: sparkling 2x2 with center bright core
+        const sparkle = Math.floor(p.life * 8) % 2 === 0;
+        const s = sparkle ? p.size : Math.max(1, p.size - 1);
+        drawPixelRect(ctx, p.color, rx - Math.floor(s / 2), ry - Math.floor(s / 2), s, s);
+        if (s >= 2) {
+          drawPixelRect(ctx, PALETTE.WHITE, rx, ry, 1, 1);
+        }
+      } else if (p.type === 'checkpoint_ring') {
+        // Expanding holy diamond ring
+        const s = Math.floor(p.size);
+        drawPixelRect(ctx, p.color, rx - s, ry, 2, 2);
+        drawPixelRect(ctx, p.color, rx + s, ry, 2, 2);
+        drawPixelRect(ctx, p.color, rx, ry - s, 2, 2);
+        drawPixelRect(ctx, p.color, rx, ry + s, 2, 2);
+        const half = Math.floor(s * 0.7);
+        drawPixelRect(ctx, PALETTE.WHITE, rx - half, ry - half, 1, 1);
+        drawPixelRect(ctx, PALETTE.WHITE, rx + half, ry - half, 1, 1);
+        drawPixelRect(ctx, PALETTE.WHITE, rx - half, ry + half, 1, 1);
+        drawPixelRect(ctx, PALETTE.WHITE, rx + half, ry + half, 1, 1);
       } else {
         const s = Math.floor(p.size);
         drawPixelRect(ctx, p.color, rx, ry, s, s);

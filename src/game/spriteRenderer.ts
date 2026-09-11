@@ -774,36 +774,217 @@ export class SpriteRenderer {
   }
 
   // ================= ORNATE GOTHIC SHRINES & LANDMARKS =================
-  public renderLandmark(ctx: CanvasRenderingContext2D, lm: Landmark, camX: number, camY: number, time: number) {
+  public renderLandmark(
+    ctx: CanvasRenderingContext2D,
+    lm: Landmark,
+    camX: number,
+    camY: number,
+    time: number,
+    isCurrentCheckpoint: boolean = false,
+    isUnlocked: boolean = false
+  ) {
     const rx = Math.floor(lm.x - camX);
     const ry = Math.floor(lm.y - camY);
 
     ctx.save();
     if (lm.type === 'shrine') {
-      // Ornate Gothic Reliquary Altar:
-      // Carved stone pedestal, stone crucifix, melted beeswax candles, and holy brass brazier
+      const centerX = rx + 16;
+      const altarBaseY = ry + 12;
+
+      // -------------------------------------------------------------
+      // 1. VERTICAL CELESTIAL DAWN BEAM (Ascending Pillar of Light)
+      // -------------------------------------------------------------
+      // An ethereal pillar of dawn light ascending into the heavens from the holy altar
+      const beamHeight = 160;
+      const beamTopY = altarBaseY - beamHeight;
+      const beamPulse = (Math.sin(time * 3) + 1) * 0.5; // 0.0 - 1.0
+      const beamCoreColor = isCurrentCheckpoint ? PALETTE.CANDLE_WHITE : PALETTE.SUN_YELLOW;
+      const beamMidColor = isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.PALE_GOLD;
+      const beamOuterColor = isCurrentCheckpoint ? PALETTE.GOLD : PALETTE.AMBER_DARK;
+
+      // Dithered celestial beam columns
+      for (let y = altarBaseY; y >= beamTopY; y -= 2) {
+        const heightRatio = (altarBaseY - y) / beamHeight; // 0 at base, 1 at sky
+        // Shimmer wave ascending upward
+        const wave = ((y + Math.floor(time * 40)) % 10 < 3);
+
+        // Beam width tapers slightly or flares
+        const halfWidth = Math.max(4, Math.floor(14 - heightRatio * 6 + beamPulse * 2));
+
+        // Outer halo dither
+        if ((Math.floor(centerX / 2) + Math.floor(y / 2)) % 2 === 0 || wave) {
+          drawPixelRect(ctx, beamOuterColor, centerX - halfWidth - 3, y, (halfWidth + 3) * 2, 2);
+        }
+
+        // Mid radiance band
+        if (halfWidth > 4) {
+          drawPixelRect(ctx, beamMidColor, centerX - Math.floor(halfWidth * 0.7), y, Math.floor(halfWidth * 1.4), 2);
+        }
+
+        // Inner pure light column
+        if (halfWidth > 2) {
+          drawPixelRect(ctx, beamCoreColor, centerX - 2, y, 4, 2);
+        }
+      }
+
+      // -------------------------------------------------------------
+      // 2. EXPANDING SACRED PULSE RING (Heartbeat of Sanctuary)
+      // -------------------------------------------------------------
+      const pulsePeriod = 2.0;
+      const pulseProgress = (time % pulsePeriod) / pulsePeriod; // 0.0 to 1.0
+      const pulseRadius = Math.floor(pulseProgress * 28);
+      if (pulseRadius > 2) {
+        const pulseColor = isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.PALE_GOLD;
+        const ringOriginY = ry - 10;
+        // 8-bit stepped diamond ring
+        drawPixelRect(ctx, pulseColor, centerX - pulseRadius, ringOriginY, 2, 2);
+        drawPixelRect(ctx, pulseColor, centerX + pulseRadius, ringOriginY, 2, 2);
+        drawPixelRect(ctx, pulseColor, centerX, ringOriginY - pulseRadius, 2, 2);
+        drawPixelRect(ctx, pulseColor, centerX, ringOriginY + pulseRadius, 2, 2);
+        const diag = Math.floor(pulseRadius * 0.7);
+        if (diag > 1) {
+          drawPixelRect(ctx, pulseColor, centerX - diag, ringOriginY - diag, 1, 1);
+          drawPixelRect(ctx, pulseColor, centerX + diag, ringOriginY - diag, 1, 1);
+          drawPixelRect(ctx, pulseColor, centerX - diag, ringOriginY + diag, 1, 1);
+          drawPixelRect(ctx, pulseColor, centerX + diag, ringOriginY + diag, 1, 1);
+        }
+      }
+
+      // -------------------------------------------------------------
+      // 3. HOVERING SOLAR CREST / SACRED HALO (Gothic Monstrance)
+      // -------------------------------------------------------------
+      const hoverBob = Math.floor(Math.sin(time * 3) * 3);
+      const crestY = ry - 24 + hoverBob;
+
+      // Outer ray burst (8 directions)
+      const rayLen = isCurrentCheckpoint ? (Math.floor(time * 6) % 2 === 0 ? 5 : 4) : 3;
+      const rayColor = isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.GOLD;
+      // Cardinal rays
+      drawPixelRect(ctx, rayColor, centerX - 1, crestY - 9 - rayLen, 2, rayLen); // Top
+      drawPixelRect(ctx, rayColor, centerX - 1, crestY + 9, 2, rayLen); // Bottom
+      drawPixelRect(ctx, rayColor, centerX - 9 - rayLen, crestY - 1, rayLen, 2); // Left
+      drawPixelRect(ctx, rayColor, centerX + 9, crestY - 1, rayLen, 2); // Right
+      // Diagonal rays
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, centerX - 8, crestY - 8, 2, 2);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, centerX + 6, crestY - 8, 2, 2);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, centerX - 8, crestY + 6, 2, 2);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, centerX + 6, crestY + 6, 2, 2);
+
+      // Sacred circular halo ring
+      drawPixelCircle(ctx, PALETTE.BLACK, centerX, crestY, 8);
+      drawPixelCircle(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.BRASS, centerX, crestY, 7);
+      drawPixelCircle(ctx, PALETTE.DARKEST_GRAY, centerX, crestY, 5);
+
+      // Center consecrated relic gem
+      const gemColor = isCurrentCheckpoint ? PALETTE.WHITE : PALETTE.SUN_YELLOW;
+      drawPixelRect(ctx, gemColor, centerX - 2, crestY - 2, 4, 4);
+      drawPixelRect(ctx, PALETTE.CYAN_HIGHLIGHT, centerX - 1, crestY - 1, 2, 2);
+
+      // -------------------------------------------------------------
+      // 4. ORNATE STONE PEDESTAL & CONSECRATION RUNES
+      // -------------------------------------------------------------
+      // Carved stone base
       drawPixelRect(ctx, PALETTE.BLACK, rx + 2, ry + 16, 28, 16);
       drawPixelRect(ctx, PALETTE.DARK_GRAY, rx, ry + 12, 32, 4);
       drawPixelRect(ctx, PALETTE.BRASS, rx + 4, ry + 10, 24, 2);
+      drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 6, ry + 10, 20, 1);
+
+      // Glowing ancient Eldorian runes on altar stone plinth
+      const runeColor = isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.PALE_GOLD;
+      // 4 distinct glyphs carved into the pedestal
+      drawPixelRect(ctx, runeColor, rx + 7, ry + 19, 3, 2);
+      drawPixelRect(ctx, runeColor, rx + 8, ry + 21, 1, 3);
+      
+      drawPixelRect(ctx, runeColor, rx + 13, ry + 20, 1, 5);
+      drawPixelRect(ctx, runeColor, rx + 12, ry + 22, 3, 1);
+
+      drawPixelRect(ctx, runeColor, rx + 18, ry + 19, 3, 1);
+      drawPixelRect(ctx, runeColor, rx + 19, ry + 20, 1, 4);
+      drawPixelRect(ctx, runeColor, rx + 18, ry + 23, 3, 1);
+
+      drawPixelRect(ctx, runeColor, rx + 24, ry + 19, 3, 2);
+      drawPixelRect(ctx, runeColor, rx + 24, ry + 22, 3, 2);
 
       // Stone crucifix at center back
       drawOrnateCross(ctx, rx + 14, ry - 6, 18, PALETTE.MID_GRAY, PALETTE.LIGHT_GRAY);
 
-      // Tall melted wax candles on flanks
+      // Tall melted beeswax candles on flanks with dripping tallow
       drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 4, ry + 2, 2, 8);
+      drawPixelRect(ctx, PALETTE.BONE_BASE, rx + 3, ry + 6, 1, 4);
       drawPixelRect(ctx, PALETTE.PALE_STONE, rx + 26, ry + 4, 2, 6);
-      // Candle flames
+      drawPixelRect(ctx, PALETTE.BONE_BASE, rx + 28, ry + 7, 1, 3);
+
+      // Candle flames & radiant halos
       const cFlicker = Math.floor(time * 8) % 2;
       drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 4, ry + (cFlicker === 0 ? 0 : 1), 2, 2);
+      drawPixelRect(ctx, PALETTE.WHITE, rx + 4, ry + (cFlicker === 0 ? 0 : 1), 1, 1);
       drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 26, ry + (cFlicker === 0 ? 3 : 2), 2, 2);
+      drawPixelRect(ctx, PALETTE.WHITE, rx + 26, ry + (cFlicker === 0 ? 3 : 2), 1, 1);
 
-      // Sacred Dawn Brazier Flame (animated 3 frames)
-      const flameFrame = Math.floor(time * 6) % 3;
-      const flameH = flameFrame === 0 ? 10 : flameFrame === 1 ? 13 : 9;
-      drawPixelRect(ctx, PALETTE.BURGUNDY, rx + 10, ry + 9 - flameH, 12, flameH);
-      drawPixelRect(ctx, PALETTE.GOLD, rx + 12, ry + 10 - flameH, 8, flameH - 2);
-      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 14, ry + 11 - flameH, 4, flameH - 4);
-      drawPixelRect(ctx, PALETTE.WHITE, rx + 15, ry + 12 - flameH, 2, flameH - 6);
+      // -------------------------------------------------------------
+      // 5. SACRED DAWN BRAZIER FLAME (Multi-tiered animated fire)
+      // -------------------------------------------------------------
+      const flameFrame = Math.floor(time * 8) % 4;
+      const flameHeights = [11, 14, 12, 15];
+      const flameH = flameHeights[flameFrame];
+
+      // Brazier basin
+      drawPixelRect(ctx, PALETTE.DARKEST_GRAY, rx + 9, ry + 7, 14, 4);
+      drawPixelRect(ctx, PALETTE.BRASS, rx + 10, ry + 8, 12, 2);
+      drawPixelRect(ctx, PALETTE.PALE_GOLD, rx + 11, ry + 8, 10, 1);
+
+      // Tier 1: Outer Crimson/Burgundy Heat
+      drawPixelRect(ctx, PALETTE.BURGUNDY, rx + 10, ry + 7 - flameH, 12, flameH);
+      // Tier 2: Fiery Golden Core
+      drawPixelRect(ctx, PALETTE.GOLD, rx + 11, ry + 8 - flameH, 10, flameH - 2);
+      // Tier 3: Bright Sun Yellow Radiance
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 13, ry + 9 - flameH, 6, flameH - 3);
+      // Tier 4: White-Hot Incandescent Heart
+      drawPixelRect(ctx, PALETTE.WHITE, rx + 14, ry + 10 - flameH, 4, flameH - 5);
+      drawPixelRect(ctx, PALETTE.CANDLE_WHITE, rx + 15, ry + 10 - flameH, 2, flameH - 7);
+
+      // Rising flame ember sparks
+      const sparkBob = (Math.floor(time * 12) % 3);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, rx + 12 + sparkBob, ry + 4 - flameH - sparkBob, 2, 2);
+      drawPixelRect(ctx, PALETTE.WHITE, rx + 17 - sparkBob, ry + 2 - flameH - sparkBob, 1, 2);
+
+      // -------------------------------------------------------------
+      // 6. VISUAL SAVE ZONE / CHECKPOINT IDENTIFICATION BANNER
+      // -------------------------------------------------------------
+      const bannerBob = Math.floor(Math.sin(time * 3) * 2);
+      const bannerY = ry - 44 + bannerBob;
+      const bannerW = isCurrentCheckpoint ? 74 : 64;
+      const bannerH = 11;
+      const bannerX = centerX - Math.floor(bannerW / 2);
+
+      // Banner backing with gothic double border
+      drawPixelRect(ctx, PALETTE.BLACK, bannerX, bannerY, bannerW, bannerH);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, bannerX, bannerY, bannerW, 1);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, bannerX, bannerY + bannerH - 1, bannerW, 1);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, bannerX, bannerY, 1, bannerH);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, bannerX + bannerW - 1, bannerY, 1, bannerH);
+
+      // Corner 2x2 golden accents
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, bannerX, bannerY, 2, 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, bannerX + bannerW - 2, bannerY, 2, 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, bannerX, bannerY + bannerH - 2, 2, 2);
+      drawPixelRect(ctx, PALETTE.SUN_YELLOW, bannerX + bannerW - 2, bannerY + bannerH - 2, 2, 2);
+
+      // Downward pointer arrow towards shrine
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, centerX - 3, bannerY + bannerH, 6, 1);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.PALE_GOLD : PALETTE.GOLD, centerX - 2, bannerY + bannerH + 1, 4, 1);
+      drawPixelRect(ctx, isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.GOLD, centerX - 1, bannerY + bannerH + 2, 2, 1);
+
+      // Banner text
+      ctx.fillStyle = isCurrentCheckpoint ? PALETTE.SUN_YELLOW : PALETTE.PALE_GOLD;
+      ctx.font = 'bold 6px monospace';
+      ctx.textAlign = 'center';
+      if (isCurrentCheckpoint) {
+        ctx.fillText('✦ SAVED SANCTUARY ✦', centerX, bannerY + 8);
+      } else {
+        ctx.fillText('✦ CHECKPOINT [E] ✦', centerX, bannerY + 8);
+      }
+      ctx.textAlign = 'start';
     } else if (lm.type === 'mural') {
       // Ornate Gothic Stone Reredos / Mural with pointed arch & scripture
       drawGothicArch(ctx, rx, ry, lm.width, lm.height, PALETTE.DARKEST_GRAY, PALETTE.BLACK, 4);
