@@ -13,6 +13,7 @@ import { ControlsOverlay } from './components/ControlsOverlay';
 import { Bestiary } from './components/Bestiary';
 import { AchievementToast } from './components/AchievementToast';
 import { soundEngine } from './audio/soundManager';
+import { controlsManager } from './game/controlsManager';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -77,118 +78,64 @@ export default function App() {
       }
 
       if (game.state === GameState.GAME_OVER) {
-        if (e.code === 'Space' || e.code === 'KeyE') {
+        if (e.code === 'Space' || controlsManager.isActionKey('interact', e.code) || controlsManager.isActionKey('jump', e.code)) {
           handleRespawn();
         }
         return;
       }
 
       if (game.state === GameState.DIALOGUE) {
-        if (e.code === 'KeyE' || e.code === 'Space') {
+        if (e.code === 'Space' || controlsManager.isActionKey('interact', e.code)) {
           handleNextDialogue();
         }
         return;
       }
 
       if (game.state === GameState.MEMORY_VIEW) {
-        if (e.code === 'KeyE' || e.code === 'Space') {
+        if (e.code === 'Space' || controlsManager.isActionKey('interact', e.code)) {
           handleCloseMemory();
         }
         return;
       }
 
       if (game.state === GameState.ENDING_CUTSCENE) {
-        if (e.code === 'KeyE' || e.code === 'Space') {
+        if (e.code === 'Space' || controlsManager.isActionKey('interact', e.code)) {
           handleNextEpilogueStep();
         }
         return;
       }
 
-      // Movement & Combat keys
-      switch (e.code) {
-        case 'KeyA':
-        case 'ArrowLeft':
-          game.keys.left = true;
-          break;
-        case 'KeyD':
-        case 'ArrowRight':
-          game.keys.right = true;
-          break;
-        case 'KeyW':
-        case 'ArrowUp':
-          game.keys.up = true;
-          break;
-        case 'KeyS':
-        case 'ArrowDown':
-          game.keys.down = true;
-          break;
-        case 'Space':
-          game.keys.jump = true;
-          break;
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          game.keys.dash = true;
-          break;
-        case 'KeyJ':
-          game.keys.attackLight = true;
-          break;
-        case 'KeyK':
-          game.keys.attackHeavy = true;
-          break;
-        case 'KeyL':
-          game.keys.block = true;
-          break;
-        case 'KeyE':
-          game.keys.interact = true;
-          break;
+      // Movement & Combat keys mapped via controlsManager
+      const actions = controlsManager.getActionsForCode(e.code);
+      if (actions.length > 0) {
+        for (const action of actions) {
+          game.keys[action] = true;
+        }
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'KeyA':
-        case 'ArrowLeft':
-          game.keys.left = false;
-          break;
-        case 'KeyD':
-        case 'ArrowRight':
-          game.keys.right = false;
-          break;
-        case 'KeyW':
-        case 'ArrowUp':
-          game.keys.up = false;
-          break;
-        case 'KeyS':
-        case 'ArrowDown':
-          game.keys.down = false;
-          break;
-        case 'Space':
-          game.keys.jump = false;
-          break;
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          game.keys.dash = false;
-          break;
-        case 'KeyJ':
-          game.keys.attackLight = false;
-          break;
-        case 'KeyK':
-          game.keys.attackHeavy = false;
-          break;
-        case 'KeyL':
-          game.keys.block = false;
-          break;
-        case 'KeyE':
-          game.keys.interact = false;
-          break;
+      const actions = controlsManager.getActionsForCode(e.code);
+      if (actions.length > 0) {
+        for (const action of actions) {
+          game.keys[action] = false;
+        }
+      }
+    };
+
+    const handleBlur = () => {
+      for (const k of Object.keys(game.keys) as (keyof typeof game.keys)[]) {
+        game.keys[k] = false;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
     };
   }, []);
 

@@ -5,6 +5,7 @@ import { WORLD_AREAS } from '../game/worldData';
 import { BESTIARY_ENTRIES, BestiaryEntry } from '../game/bestiaryData';
 import { BestiaryModal } from './BestiaryModal';
 import { AchievementsList } from './AchievementsList';
+import { ControlsTab } from './ControlsTab';
 
 interface PauseMenuProps {
   player: PlayerStats;
@@ -106,7 +107,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   : 'bg-[#181818] text-[#909090] border-[#303030]'
               }`}
             >
-              KEYS
+              CONTROLS
             </button>
             <button
               onClick={() => setActiveTab('sound')}
@@ -149,6 +150,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               <span className={isMuted ? 'text-[#d82838] font-bold' : 'text-[#58c868] font-bold'}>
                 {isMuted ? 'MUTED' : 'ENABLED'}
               </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('controls')}
+              className="flex items-center justify-between px-3 py-2 bg-[#181818] hover:bg-[#303030] text-[#f8f8f8] border-2 border-[#585858] text-xs uppercase cursor-pointer"
+            >
+              <span>CUSTOMIZE CONTROLS</span>
+              <span className="text-[#f8a020] font-bold">KEYMAP ⚙</span>
             </button>
 
             <button
@@ -258,38 +267,9 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           <AchievementsList unlockedIds={player.unlockedAchievements || []} />
         )}
 
-        {/* Tab 4: Controls Reference */}
+        {/* Tab 4: Controls & Keybinding Mapping */}
         {activeTab === 'controls' && (
-          <div className="grid grid-cols-2 gap-2 text-[10px] py-1">
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">A / D</span>
-              <span className="text-[#909090]">MOVE LEFT / RIGHT</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">SPACE</span>
-              <span className="text-[#909090]">JUMP / CLIMB</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">SHIFT</span>
-              <span className="text-[#909090]">DASH EVADE</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">J</span>
-              <span className="text-[#909090]">LIGHT SLASH</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">K</span>
-              <span className="text-[#909090]">HEAVY CLEAVE</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030]">
-              <span className="text-[#f8a020] block font-bold">L</span>
-              <span className="text-[#909090]">SHIELD BLOCK</span>
-            </div>
-            <div className="bg-[#181818] p-2 border border-[#303030] col-span-2">
-              <span className="text-[#f8a020] block font-bold">E</span>
-              <span className="text-[#909090]">INTERACT (SHRINE, NPC, DOOR, SHARD)</span>
-            </div>
-          </div>
+          <ControlsTab />
         )}
 
         {/* Tab 4: Audio Volumes */}

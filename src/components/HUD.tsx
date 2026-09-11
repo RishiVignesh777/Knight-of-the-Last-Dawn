@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerStats, AreaId, Enemy } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
+import { controlsManager } from '../game/controlsManager';
 
 interface HUDProps {
   player: PlayerStats;
@@ -36,6 +37,20 @@ export const HUD: React.FC<HUDProps> = ({
 
   const totalShards = 5;
   const collectedCount = player.memoryShards.length;
+
+  const [promptBindings, setPromptBindings] = useState(() => controlsManager.getBindings());
+  useEffect(() => {
+    return controlsManager.subscribe(b => setPromptBindings({ ...b }));
+  }, []);
+
+  const leftKey = controlsManager.getKeyLabelForAction('left');
+  const rightKey = controlsManager.getKeyLabelForAction('right');
+  const jumpKey = controlsManager.getKeyLabelForAction('jump');
+  const dashKey = controlsManager.getKeyLabelForAction('dash');
+  const slashKey = controlsManager.getKeyLabelForAction('attackLight');
+  const cleaveKey = controlsManager.getKeyLabelForAction('attackHeavy');
+  const blockKey = controlsManager.getKeyLabelForAction('block');
+  const actionKey = controlsManager.getKeyLabelForAction('interact');
 
   return (
     <div id="game-hud" className="absolute inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none font-mono">
@@ -204,7 +219,9 @@ export const HUD: React.FC<HUDProps> = ({
 
       {/* Retro Bottom Info */}
       <div className="text-[9px] text-[#909090] flex justify-between tracking-wide">
-        <span className="hidden sm:inline">A/D:MOVE  SPACE:JUMP  SHIFT:DASH  J:SLASH  K:CLEAVE  L:BLOCK  E:ACTION  B:BESTIARY</span>
+        <span className="hidden sm:inline">
+          {leftKey}/{rightKey}:MOVE  {jumpKey}:JUMP  {dashKey}:DASH  {slashKey}:SLASH  {cleaveKey}:CLEAVE  {blockKey}:BLOCK  {actionKey}:ACTION  B:BESTIARY
+        </span>
         <span className="ml-auto">ESC:PAUSE</span>
       </div>
     </div>
