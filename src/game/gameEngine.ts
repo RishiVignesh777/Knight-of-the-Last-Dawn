@@ -43,6 +43,7 @@ import { parallaxEngine } from './parallaxBackgrounds';
 import { lightingEngine } from './lightingEngine';
 import { PALETTE, drawPixelRect } from './pixelArtHelper';
 import { getBestiaryEntry } from './bestiaryData';
+import { getAchievement, Achievement } from './achievementData';
 
 export class GameEngine {
   public state: GameState = GameState.MENU;
@@ -82,6 +83,11 @@ export class GameEngine {
     timer: number;
   } | null = null;
 
+  public activeAchievementToast: {
+    achievement: Achievement;
+    timer: number;
+  } | null = null;
+
   private gameTime: number = 0;
   private jumpBufferTimer: number = 0;
   private coyoteTimer: number = 0;
@@ -105,6 +111,28 @@ export class GameEngine {
   constructor() {
     this.player = this.createDefaultPlayer();
     this.loadArea(AreaId.VILLAGE, false);
+  }
+
+  public unlockAchievement(id: string, silent: boolean = false) {
+    if (!this.player.unlockedAchievements) {
+      this.player.unlockedAchievements = [];
+    }
+    if (this.player.unlockedAchievements.includes(id)) {
+      return;
+    }
+    this.player.unlockedAchievements.push(id);
+    this.saveGame();
+
+    if (!silent) {
+      const ach = getAchievement(id);
+      if (ach) {
+        this.activeAchievementToast = {
+          achievement: ach,
+          timer: 5.0
+        };
+        soundEngine.playAchievementUnlocked();
+      }
+    }
   }
 
   private createDefaultPlayer(): PlayerStats {
@@ -142,7 +170,8 @@ export class GameEngine {
       collectedShardsInArea: {},
       unlockedCheckpoints: ['shrine_village'],
       currentCheckpoint: { areaId: AreaId.VILLAGE, x: 80, y: 280 },
-      discoveredEnemies: []
+      discoveredEnemies: [],
+      unlockedAchievements: []
     };
   }
 
@@ -171,8 +200,21 @@ export class GameEngine {
         collectedShardsInArea: data.collectedShardsInArea || {},
         unlockedCheckpoints: data.unlockedCheckpoints || ['shrine_village'],
         currentCheckpoint: data.currentCheckpoint || { areaId: AreaId.VILLAGE, x: 80, y: 280 },
-        discoveredEnemies: data.discoveredEnemies || []
+        discoveredEnemies: data.discoveredEnemies || [],
+        unlockedAchievements: data.unlockedAchievements || []
       };
+
+      // Retroactive validation for saved progress milestones
+      if (this.player.memoryShards.length >= 1) {
+        this.unlockAchievement('COLLECT_FIRST_SHARD', true);
+      }
+      if (this.player.memoryShards.length >= 5) {
+        this.unlockAchievement('COLLECT_ALL_SHARDS', true);
+      }
+      if (this.player.discoveredEnemies.length >= 5) {
+        this.unlockAchievement('BESTIARY_SCHOLAR', true);
+      }
+
       const cp = this.player.currentCheckpoint;
       if (cp) {
         this.loadArea(cp.areaId, false);
@@ -199,6 +241,7 @@ export class GameEngine {
         unlockedCheckpoints: this.player.unlockedCheckpoints,
         currentCheckpoint: this.player.currentCheckpoint,
         discoveredEnemies: this.player.discoveredEnemies,
+        unlockedAchievements: this.player.unlockedAchievements,
         currentAreaId: this.currentAreaId
       };
       localStorage.setItem('knight_last_dawn_save', JSON.stringify(data));
@@ -243,6 +286,10 @@ export class GameEngine {
     if (this.state === GameState.PLAYING) {
       soundEngine.playMusicForArea(areaId);
     }
+
+    if (areaId === AreaId.CATHEDRAL || areaId === AreaId.LAKE || areaId === AreaId.CAPITAL) {
+      this.unlockAchievement('SANCTUM_WAYFARER');
+    }
   }
 
   // ================= MAIN UPDATE LOOP =================
@@ -280,6 +327,13 @@ export class GameEngine {
       this.bestiaryDiscoveryToast.timer -= clampedDt;
       if (this.bestiaryDiscoveryToast.timer <= 0) {
         this.bestiaryDiscoveryToast = null;
+      }
+    }
+
+    if (this.activeAchievementToast) {
+      this.activeAchievementToast.timer -= clampedDt;
+      if (this.activeAchievementToast.timer <= 0) {
+        this.activeAchievementToast = null;
       }
     }
 
@@ -603,11 +657,15 @@ export class GameEngine {
 
         // Gain Dawn Energy on hit
         p.dawnEnergy = Math.min(p.maxDawnEnergy, p.dawnEnergy + (isHeavy ? 14 : 7));
+        if (p.dawnEnergy >= p.maxDawnEnergy) {
+          this.unlockAchievement('SOLAR_CONVERGENCE');
+        }
 
         // Check enemy death
         if (e.hp <= 0) {
           e.state = 'dead';
           soundEngine.playEnemyDeath();
+          this.unlockAchievement('FIRST_BLOOD');
           if (e.isBoss) {
             this.handleBossDefeat();
           }
@@ -634,6 +692,7 @@ export class GameEngine {
       particleEngine.spawnSwordSlashSparks(p.x + p.width / 2, p.y + p.height / 2, -knockbackDir, false);
       p.vx = knockbackDir * 40;
       this.camera.shake = 2;
+      this.unlockAchievement('UNYIELDING_BULWARK');
       return;
     }
 
@@ -676,6 +735,10 @@ export class GameEngine {
         timer: 4.5
       };
       soundEngine.playMenuBeep(true);
+
+      if (this.player.discoveredEnemies.length >= 5) {
+        this.unlockAchievement('BESTIARY_SCHOLAR');
+      }
     }
   }
 
@@ -931,6 +994,7 @@ export class GameEngine {
 
   private handleBossDefeat() {
     this.bossDefeated = true;
+    this.unlockAchievement('DEFEAT_FIRST_BOSS');
     soundEngine.playBossRoar();
     this.camera.shake = 16;
     this.state = GameState.ENDING_CHOICE;
@@ -941,6 +1005,7 @@ export class GameEngine {
     this.activeEndingChoice = choice;
     this.state = GameState.ENDING_CUTSCENE;
     this.endingEpilogueStep = 0;
+    this.unlockAchievement('THE_FINAL_DAWN');
 
     if (choice === EndingType.SACRIFICE) {
       this.endingEpilogueText = [
@@ -1058,6 +1123,10 @@ export class GameEngine {
         this.activeMemoryModal = shard;
         this.state = GameState.MEMORY_VIEW;
         this.saveGame();
+        this.unlockAchievement('COLLECT_FIRST_SHARD');
+        if (p.memoryShards.length >= 5) {
+          this.unlockAchievement('COLLECT_ALL_SHARDS');
+        }
         return;
       }
     }
@@ -1077,6 +1146,7 @@ export class GameEngine {
           soundEngine.playShrineRest();
           this.activeLandmarkText = lm.text || 'Rested at Shrine.';
           this.saveGame();
+          this.unlockAchievement('PILGRIM_OF_ELDORIA');
           return;
         } else if (lm.type === 'door' && lm.targetArea) {
           soundEngine.playMenuBeep(true);

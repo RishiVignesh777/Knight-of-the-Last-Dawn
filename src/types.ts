@@ -103,6 +103,7 @@ export interface PlayerStats {
   unlockedCheckpoints: string[];
   currentCheckpoint: { areaId: AreaId; x: number; y: number } | null;
   discoveredEnemies: string[];
+  unlockedAchievements: string[];
 }
 
 export interface Enemy {

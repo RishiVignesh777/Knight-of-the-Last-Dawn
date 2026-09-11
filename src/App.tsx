@@ -11,6 +11,7 @@ import { GameOverModal } from './components/GameOverModal';
 import { MainMenu } from './components/MainMenu';
 import { ControlsOverlay } from './components/ControlsOverlay';
 import { Bestiary } from './components/Bestiary';
+import { AchievementToast } from './components/AchievementToast';
 import { soundEngine } from './audio/soundManager';
 
 export default function App() {
@@ -34,6 +35,8 @@ export default function App() {
   const [crtEnabled, setCrtEnabled] = useState(false);
   const [hasSavedGame, setHasSavedGame] = useState(game.hasSave());
   const [discoveryToast, setDiscoveryToast] = useState(game.bestiaryDiscoveryToast);
+  const [achievementToast, setAchievementToast] = useState(game.activeAchievementToast);
+  const [pauseInitialTab, setPauseInitialTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound'>('main');
 
   // Input event listeners
   useEffect(() => {
@@ -50,6 +53,7 @@ export default function App() {
           return;
         }
         if (game.state === GameState.PLAYING) {
+          setPauseInitialTab('main');
           game.state = GameState.PAUSED;
           setGameState(GameState.PAUSED);
         } else if (game.state === GameState.PAUSED) {
@@ -231,6 +235,7 @@ export default function App() {
         setEndingChoice(game.activeEndingChoice);
         setEpilogueStep(game.endingEpilogueStep);
         setDiscoveryToast(game.bestiaryDiscoveryToast ? { ...game.bestiaryDiscoveryToast } : null);
+        setAchievementToast(game.activeAchievementToast ? { ...game.activeAchievementToast } : null);
       }
 
       animationFrameId = requestAnimationFrame(loop);
@@ -251,6 +256,13 @@ export default function App() {
     if (game.continueGame()) {
       setGameState(GameState.PLAYING);
     }
+  };
+
+  const handleOpenAchievements = () => {
+    setPauseInitialTab('achievements');
+    game.state = GameState.PAUSED;
+    setGameState(GameState.PAUSED);
+    soundEngine.playMenuBeep(true);
   };
 
   const handleRespawn = () => {
@@ -359,6 +371,7 @@ export default function App() {
             bossEnemy={bossEnemy}
             discoveryToast={discoveryToast}
             onOpenBestiary={handleOpenBestiary}
+            onOpenAchievements={handleOpenAchievements}
           />
         )}
 
@@ -379,6 +392,7 @@ export default function App() {
           <PauseMenu
             player={game.player}
             crtEnabled={crtEnabled}
+            initialTab={pauseInitialTab}
             onToggleCrt={() => setCrtEnabled(!crtEnabled)}
             onResume={() => {
               game.state = GameState.PLAYING;
@@ -442,6 +456,17 @@ export default function App() {
           <GameOverModal
             onRespawn={handleRespawn}
             onQuitToMenu={handleRestartToTitle}
+          />
+        )}
+
+        {/* Global Achievement Unlocked Toast Notification */}
+        {achievementToast && (
+          <AchievementToast
+            achievement={achievementToast.achievement}
+            onClose={() => {
+              game.activeAchievementToast = null;
+              setAchievementToast(null);
+            }}
           />
         )}
       </div>

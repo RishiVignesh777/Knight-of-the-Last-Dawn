@@ -4,10 +4,12 @@ import { PlayerStats, MemoryShard } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
 import { BESTIARY_ENTRIES, BestiaryEntry } from '../game/bestiaryData';
 import { BestiaryModal } from './BestiaryModal';
+import { AchievementsList } from './AchievementsList';
 
 interface PauseMenuProps {
   player: PlayerStats;
   crtEnabled: boolean;
+  initialTab?: 'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound';
   onToggleCrt: () => void;
   onResume: () => void;
   onQuitToMenu: () => void;
@@ -16,11 +18,12 @@ interface PauseMenuProps {
 export const PauseMenu: React.FC<PauseMenuProps> = ({
   player,
   crtEnabled,
+  initialTab = 'main',
   onToggleCrt,
   onResume,
   onQuitToMenu
 }) => {
-  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'sound'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound'>(initialTab);
   const [inspectedEntry, setInspectedEntry] = useState<BestiaryEntry | null>(null);
   const [isMuted, setIsMuted] = useState(soundEngine.isSoundMuted());
   const [masterVol, setMasterVol] = useState(0.8);
@@ -84,6 +87,16 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               }`}
             >
               BESTIARY ({(player.discoveredEnemies || []).length}/9)
+            </button>
+            <button
+              onClick={() => setActiveTab('achievements')}
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'achievements'
+                  ? 'bg-[#ecc25e] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
+              }`}
+            >
+              MILESTONES ({(player.unlockedAchievements || []).length}/10)
             </button>
             <button
               onClick={() => setActiveTab('controls')}
@@ -238,6 +251,11 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               );
             })}
           </div>
+        )}
+
+        {/* Tab: Achievements / Chronicles */}
+        {activeTab === 'achievements' && (
+          <AchievementsList unlockedIds={player.unlockedAchievements || []} />
         )}
 
         {/* Tab 4: Controls Reference */}

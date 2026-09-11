@@ -633,6 +633,45 @@ class SoundManager {
     osc.start(now);
     osc.stop(now + (isConfirm ? 0.19 : 0.09));
   }
+
+  public playAchievementUnlocked() {
+    this.initContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    // Triumphant gothic fanfare: C5 (523Hz), E5 (659Hz), G5 (784Hz), C6 (1046Hz)
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, i) => {
+      const startTime = now + i * 0.11;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = i === 3 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.24, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + (i === 3 ? 0.85 : 0.45));
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+      osc.start(startTime);
+      osc.stop(startTime + (i === 3 ? 0.9 : 0.5));
+    });
+
+    // Sub shimmer overtone
+    const shimmerOsc = ctx.createOscillator();
+    const shimmerGain = ctx.createGain();
+    shimmerOsc.type = 'triangle';
+    shimmerOsc.frequency.setValueAtTime(1567.98, now + 0.33); // G6 bell harmonic
+    shimmerGain.gain.setValueAtTime(0.08, now + 0.33);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+    shimmerOsc.connect(shimmerGain);
+    shimmerGain.connect(this.sfxGain!);
+    shimmerOsc.start(now + 0.33);
+    shimmerOsc.stop(now + 1.15);
+  }
 }
 
 export const soundEngine = new SoundManager();

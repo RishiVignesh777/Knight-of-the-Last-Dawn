@@ -8,6 +8,7 @@ interface HUDProps {
   bossEnemy?: Enemy;
   discoveryToast?: { enemyName: string; timer: number } | null;
   onOpenBestiary?: () => void;
+  onOpenAchievements?: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -15,7 +16,8 @@ export const HUD: React.FC<HUDProps> = ({
   currentAreaId,
   bossEnemy,
   discoveryToast,
-  onOpenBestiary
+  onOpenBestiary,
+  onOpenAchievements
 }) => {
   const currentArea = WORLD_AREAS[currentAreaId];
 
@@ -132,6 +134,16 @@ export const HUD: React.FC<HUDProps> = ({
             >
               <div className="w-2 h-2 rotate-45 bg-[#ecc25e] border border-black" />
               <span>BESTIARY: {(player.discoveredEnemies || []).length}/9 [B]</span>
+            </button>
+
+            {/* 8-bit Achievements Button */}
+            <button
+              onClick={onOpenAchievements}
+              className="pointer-events-auto bg-[#0b0714] hover:bg-[#1f1530] border-2 border-[#f8a020] px-2.5 py-1 flex items-center gap-1.5 text-[#f8a020] hover:text-[#f8f870] text-[10px] shadow-[2px_2px_0px_#000000] cursor-pointer transition"
+              title="Open Achievements & Milestones"
+            >
+              <div className="w-2 h-2 rotate-45 bg-[#f8a020] border border-black" />
+              <span>MILESTONES: {(player.unlockedAchievements || []).length}/10</span>
             </button>
 
             {/* 8-bit Shard Tracker */}
