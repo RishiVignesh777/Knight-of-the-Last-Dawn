@@ -272,7 +272,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           <ControlsTab />
         )}
 
-        {/* Tab 4: Audio Volumes */}
+        {/* Tab 5: Audio Volumes & Dynamic Boss Music Preview */}
         {activeTab === 'sound' && (
           <div className="flex flex-col gap-3 py-1 text-xs">
             <div>
@@ -319,6 +319,42 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 onChange={e => handleVolumeChange('sfx', parseFloat(e.target.value))}
                 className="w-full accent-[#f8a020] cursor-pointer"
               />
+            </div>
+
+            {/* Dynamic Boss Music System Info & Tester */}
+            <div className="mt-2 pt-2 border-t border-[#303030] flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-[#f8a020] font-bold">DYNAMIC BATTLE THEME</span>
+                <span className="text-[#909090]">
+                  TRACK: {soundEngine.getCurrentTrack() || 'EXPLORATION'}
+                </span>
+              </div>
+              <p className="text-[#a0a0a0] text-[9px] leading-relaxed">
+                Boss battle tracks smoothly scale tempo and intensity as the boss transitions through phases (Phase 1: 150 BPM Sovereign → Phase 2: 187 BPM Gallop → Phase 3: 240 BPM Shadow Fiend).
+              </p>
+              <div className="grid grid-cols-3 gap-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => soundEngine.playBossMusic(1)}
+                  className="px-2 py-1 bg-[#181818] hover:bg-[#282030] border border-[#f8a020] text-[#f8a020] text-[9px] font-bold cursor-pointer transition text-center"
+                >
+                  TEST PHASE 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => soundEngine.playBossMusic(2)}
+                  className="px-2 py-1 bg-[#181818] hover:bg-[#282030] border border-[#f8a020] text-[#f8a020] text-[9px] font-bold cursor-pointer transition text-center"
+                >
+                  TEST PHASE 2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => soundEngine.playBossMusic(3)}
+                  className="px-2 py-1 bg-[#181818] hover:bg-[#282030] border border-[#f83800] text-[#f83800] text-[9px] font-bold cursor-pointer transition text-center"
+                >
+                  TEST PHASE 3
+                </button>
+              </div>
             </div>
           </div>
         )}

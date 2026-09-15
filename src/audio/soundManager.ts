@@ -12,8 +12,10 @@ class SoundManager {
   private sfxVolume: number = 0.85;
 
   private currentTrack: string | null = null;
+  private currentBossPhase: number = 1;
   private musicInterval: number | null = null;
   private ambienceOscillators: { stop: () => void }[] = [];
+  private crossfadeTimer: number | null = null;
 
   constructor() {
     // Lazy initialize on first interaction to comply with browser autoplay policies
@@ -70,14 +72,94 @@ class SoundManager {
   }
 
   // ---- MUSIC GENERATOR ----
-  public playMusicForArea(areaId: AreaId | 'MENU' | 'BOSS' | 'ENDING') {
-    if (this.currentTrack === areaId) return;
+  public playMusicForArea(areaId: AreaId | 'MENU' | 'BOSS' | 'ENDING', bossPhase: number = 1, fadeDurationMs: number = 600) {
+    if (this.currentTrack === areaId) {
+      // If already playing BOSS track, check if phase has changed to transition intensity dynamically
+      if (areaId === 'BOSS' && this.currentBossPhase !== bossPhase) {
+        this.setBossPhase(bossPhase);
+      }
+      return;
+    }
+
     this.currentTrack = areaId;
-    this.stopMusic();
+    this.currentBossPhase = bossPhase;
 
     this.initContext();
     if (!this.ctx || !this.musicGain) return;
 
+    if (fadeDurationMs > 0) {
+      // Smooth fade out of previous track before starting new track
+      this.crossfadeToTrack(areaId, bossPhase, fadeDurationMs);
+    } else {
+      this.stopMusic();
+      this.startTrack(areaId, bossPhase);
+    }
+  }
+
+  public playBossMusic(phase: number = 1, fadeDurationMs: number = 350) {
+    if (this.currentTrack === 'BOSS') {
+      if (this.currentBossPhase !== phase) {
+        this.setBossPhase(phase);
+      }
+      return;
+    }
+    this.playMusicForArea('BOSS', phase, fadeDurationMs);
+  }
+
+  public setBossPhase(phase: number) {
+    this.currentBossPhase = Math.max(1, Math.min(3, phase));
+    if (this.currentTrack === 'BOSS') {
+      // Seamlessly restart boss theme at the new intensity level
+      if (this.musicInterval !== null) {
+        window.clearInterval(this.musicInterval);
+        this.musicInterval = null;
+      }
+      this.startBossThemeForPhase(this.currentBossPhase);
+    }
+  }
+
+  public getCurrentTrack(): string | null {
+    return this.currentTrack;
+  }
+
+  public getCurrentBossPhase(): number {
+    return this.currentBossPhase;
+  }
+
+  private crossfadeToTrack(trackId: AreaId | 'MENU' | 'BOSS' | 'ENDING', bossPhase: number, durationMs: number) {
+    if (!this.ctx || !this.musicGain) {
+      this.stopMusic();
+      this.startTrack(trackId, bossPhase);
+      return;
+    }
+
+    if (this.crossfadeTimer !== null) {
+      window.clearTimeout(this.crossfadeTimer);
+      this.crossfadeTimer = null;
+    }
+
+    const t = this.ctx.currentTime;
+    const fadeSec = durationMs / 1000;
+    
+    // Ramp down current music gain smoothly
+    this.musicGain.gain.cancelScheduledValues(t);
+    this.musicGain.gain.setValueAtTime(this.musicGain.gain.value, t);
+    this.musicGain.gain.linearRampToValueAtTime(0.001, t + fadeSec);
+
+    this.crossfadeTimer = window.setTimeout(() => {
+      this.stopMusic();
+      if (this.ctx && this.musicGain) {
+        const startT = this.ctx.currentTime;
+        this.musicGain.gain.cancelScheduledValues(startT);
+        this.musicGain.gain.setValueAtTime(0.001, startT);
+        this.musicGain.gain.linearRampToValueAtTime(this.musicVolume, startT + fadeSec * 0.8);
+      }
+      this.startTrack(trackId, bossPhase);
+      this.crossfadeTimer = null;
+    }, durationMs);
+  }
+
+  private startTrack(areaId: AreaId | 'MENU' | 'BOSS' | 'ENDING', bossPhase: number = 1) {
     switch (areaId) {
       case 'MENU':
         this.startMenuMusic();
@@ -101,7 +183,7 @@ class SoundManager {
         this.startTowerMusic();
         break;
       case 'BOSS':
-        this.startBossMusic();
+        this.startBossThemeForPhase(bossPhase);
         break;
       case 'ENDING':
         this.startEndingMusic();
@@ -110,6 +192,10 @@ class SoundManager {
   }
 
   public stopMusic() {
+    if (this.crossfadeTimer !== null) {
+      window.clearTimeout(this.crossfadeTimer);
+      this.crossfadeTimer = null;
+    }
     if (this.musicInterval !== null) {
       window.clearInterval(this.musicInterval);
       this.musicInterval = null;
@@ -300,22 +386,102 @@ class SoundManager {
   }
 
   private startBossMusic() {
-    // The Dying King - Epic multi-rhythm battle theme!
-    const bassline = [55, 61.74, 65.41, 73.42, 65.41, 61.74, 55, 49];
-    let step = 0;
-    const loop = () => {
-      const bass = bassline[step % bassline.length];
-      this.playTone(bass, 0.35, 'sawtooth', 0.08, 0);
-      this.playTone(bass * 2, 0.25, 'triangle', 0.07, 0.2);
-      
-      if (step % 4 === 0) {
-        this.playTone(220, 0.8, 'sawtooth', 0.07, 0);
-        this.playTone(329.63, 0.8, 'sawtooth', 0.06, 0);
-      }
-      step++;
-    };
-    loop();
-    this.musicInterval = window.setInterval(loop, 400);
+    this.startBossThemeForPhase(1);
+  }
+
+  private startBossThemeForPhase(phase: number) {
+    // The Dying King - Dynamic high-tempo multi-phase battle theme!
+    // Phase 1 (Sovereign): 150 BPM (400ms per 8th note), menacing saw bassline and brass stabs
+    // Phase 2 (Corrupted): 187 BPM (320ms), galloping rhythm, diminished arpeggios & high counter-melody
+    // Phase 3 (Shadow Fiend): 240 BPM (250ms), frenzy double-tempo pulse, gothic dissonance, rapid 16th stabs
+
+    const p = Math.max(1, Math.min(3, phase));
+
+    if (p === 1) {
+      // Phase 1: Heavy, deliberate martial menace (150 BPM / 400ms loop)
+      const bassline = [55, 55, 65.41, 61.74, 58.27, 55, 49, 52];
+      const chords = [
+        [220, 261.63, 329.63], // Am
+        [207.65, 246.94, 311.13], // G#dim
+        [196, 233.08, 293.66], // Gm
+        [185, 220, 277.18] // F#dim
+      ];
+      let step = 0;
+      const loop = () => {
+        const bass = bassline[step % bassline.length];
+        this.playTone(bass, 0.32, 'sawtooth', 0.085, 0);
+        this.playTone(bass * 2, 0.2, 'triangle', 0.07, 0.18);
+
+        // Percussive noise emulation on backbeat
+        if (step % 2 === 1) {
+          this.playTone(110, 0.08, 'square', 0.05, 0);
+        }
+
+        // Heavy brass chords every 4 steps
+        if (step % 4 === 0) {
+          const chord = chords[(Math.floor(step / 4)) % chords.length];
+          chord.forEach((n, idx) => {
+            this.playTone(n, 0.65, 'sawtooth', 0.065, idx * 0.02);
+          });
+        }
+        step++;
+      };
+      loop();
+      this.musicInterval = window.setInterval(loop, 400);
+
+    } else if (p === 2) {
+      // Phase 2: Corrupted Frenzy - Fast galloping rhythm (187 BPM / 320ms loop)
+      const bassline = [65.41, 65.41, 73.42, 69.3, 61.74, 65.41, 55, 58.27];
+      const leadArp = [440, 523.25, 622.25, 659.25, 523.25, 440, 392, 415.3];
+      let step = 0;
+      const loop = () => {
+        const bass = bassline[step % bassline.length];
+        // Galloping bass notes (two rapid hits)
+        this.playTone(bass, 0.22, 'sawtooth', 0.095, 0);
+        this.playTone(bass * 1.5, 0.16, 'square', 0.065, 0.15);
+
+        // High frantic arpeggio
+        const lead = leadArp[step % leadArp.length];
+        this.playTone(lead, 0.25, 'triangle', 0.075, 0.08);
+
+        // Dissonant orchestral hit every 4 beats
+        if (step % 4 === 0) {
+          this.playTone(220, 0.55, 'sawtooth', 0.08, 0);
+          this.playTone(311.13, 0.55, 'sawtooth', 0.075, 0); // Diminished 5th (tritone dissonance)
+          this.playTone(440, 0.55, 'sawtooth', 0.07, 0);
+        }
+        step++;
+      };
+      loop();
+      this.musicInterval = window.setInterval(loop, 320);
+
+    } else {
+      // Phase 3: Shadow Fiend - Maximum tempo & chaotic climactic fury (240 BPM / 250ms loop)
+      const bassNotes = [73.42, 77.78, 82.41, 87.31, 82.41, 77.78, 65.41, 69.3];
+      const screechMelody = [880, 932.33, 880, 830.61, 783.99, 830.61, 880, 1046.5];
+      let step = 0;
+      const loop = () => {
+        const b = bassNotes[step % bassNotes.length];
+        // Relentless driving double-kick bass
+        this.playTone(b, 0.18, 'sawtooth', 0.11, 0);
+        this.playTone(b / 2, 0.22, 'square', 0.09, 0.12);
+
+        // Piercing screech high tone simulating manic rage
+        const scream = screechMelody[step % screechMelody.length];
+        this.playTone(scream, 0.18, 'sawtooth', 0.065, 0.04);
+        this.playTone(scream * 0.75, 0.2, 'triangle', 0.06, 0.1);
+
+        // Heavy dark power chord every 2 steps
+        if (step % 2 === 0) {
+          this.playTone(146.83, 0.4, 'sawtooth', 0.085, 0); // D3
+          this.playTone(220, 0.4, 'sawtooth', 0.08, 0);     // A3
+          this.playTone(293.66, 0.4, 'sawtooth', 0.075, 0);  // D4
+        }
+        step++;
+      };
+      loop();
+      this.musicInterval = window.setInterval(loop, 250);
+    }
   }
 
   private startEndingMusic() {

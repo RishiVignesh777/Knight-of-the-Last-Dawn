@@ -266,6 +266,7 @@ export class GameEngine {
     }
 
     // Spawn enemies
+    this.bossEncountered = false;
     this.enemies = area.enemies.map(e => ({
       ...e,
       vx: 0,
@@ -931,7 +932,8 @@ export class GameEngine {
     if (!this.bossEncountered && distToPlayer < 350) {
       this.bossEncountered = true;
       soundEngine.playBossRoar();
-      soundEngine.playMusicForArea('BOSS');
+      // Smooth dynamic crossfade into intense battle theme
+      soundEngine.playBossMusic(boss.bossPhase || 1, 400);
     }
 
     // Phase threshold check
@@ -940,6 +942,7 @@ export class GameEngine {
       if (boss.bossPhase !== 3) {
         boss.bossPhase = 3;
         soundEngine.playBossRoar();
+        soundEngine.playBossMusic(3);
         this.camera.shake = 12;
         particleEngine.spawnShockwave(boss.x + boss.width / 2, boss.y + boss.height);
       }
@@ -947,6 +950,7 @@ export class GameEngine {
       if (boss.bossPhase !== 2) {
         boss.bossPhase = 2;
         soundEngine.playBossRoar();
+        soundEngine.playBossMusic(2);
         this.camera.shake = 8;
       }
     }
