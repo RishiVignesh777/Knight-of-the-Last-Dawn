@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlayerStats, AreaId, Enemy } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
 import { controlsManager } from '../game/controlsManager';
+import { particleEngine } from '../game/particleSystem';
 
 interface HUDProps {
   player: PlayerStats;
@@ -130,10 +131,26 @@ export const HUD: React.FC<HUDProps> = ({
 
         {/* Area & Shard Info Panel */}
         <div className="flex flex-col items-end gap-2">
-          {/* 8-bit Area Title Card */}
+          {/* 8-bit Area Title Card & Dynamic Weather Indicator */}
           <div className="bg-[#0b0714] border-2 border-[#f8a020] px-3 py-1.5 text-right shadow-[2px_2px_0px_#000000]">
-            <div className="text-[#f8a020] text-xs font-bold tracking-wider uppercase">
-              {currentArea.name}
+            <div className="flex items-center justify-end gap-1.5">
+              <span className="text-[#909090] text-[9px] font-bold">
+                {(() => {
+                  const w = particleEngine.getWeatherOverride() || currentArea.weather;
+                  if (w === 'ashen_embers') return '🔥 ASHEN EMBERS';
+                  if (w === 'snowfall') return '❄ DRIFTING SNOW';
+                  if (w === 'storm_rain') return '🌧 TEMPEST RAIN';
+                  if (w === 'storm_embers') return '🌪 EMBER GALE';
+                  if (w === 'sunset_dust') return '🍂 TWILIGHT LEAVES';
+                  if (w === 'forest_fog') return '🍃 VERDANT MIST';
+                  if (w === 'lake_mist') return '🌙 LUNAR HAZE';
+                  if (w === 'dawn_rays') return '✨ DAWN RAYS';
+                  return '✨ AMBIENT';
+                })()}
+              </span>
+              <div className="text-[#f8a020] text-xs font-bold tracking-wider uppercase">
+                {currentArea.name}
+              </div>
             </div>
             <div className="text-[#c0c0c0] text-[9px] mt-0.5">
               {currentArea.subtitle}

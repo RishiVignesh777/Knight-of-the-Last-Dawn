@@ -1315,6 +1315,9 @@ export class GameEngine {
 
     // 11. Render Foreground Parallax Elements (Layer 1)
     parallaxEngine.renderForeground(ctx, this.currentAreaId, camX, camY);
+
+    // 12. Render Atmospheric Foreground Weather Overlay (Front-layer embers, snow, leaves)
+    particleEngine.renderWeatherForeground(ctx, camX, camY);
   }
 }
 

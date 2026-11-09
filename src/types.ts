@@ -174,7 +174,7 @@ export interface Particle {
   maxLife: number;
   color: string;
   size: number;
-  type: 'spark' | 'dust' | 'leaf' | 'rain' | 'firefly' | 'blood' | 'dawn' | 'slash_trail' | 'smoke' | 'shockwave' | 'checkpoint_mote' | 'checkpoint_ring';
+  type: 'spark' | 'dust' | 'leaf' | 'rain' | 'firefly' | 'blood' | 'dawn' | 'slash_trail' | 'smoke' | 'shockwave' | 'checkpoint_mote' | 'checkpoint_ring' | 'ember' | 'snow' | 'ash' | 'cinder';
   alpha?: number;
 }
 
@@ -223,7 +223,7 @@ export interface AreaData {
   spawnX: number;
   spawnY: number;
   ambientLight: string; // e.g., 'rgba(20, 10, 30, 0.4)'
-  weather: 'sunset_dust' | 'forest_fog' | 'lake_mist' | 'storm_rain' | 'cathedral_haze' | 'dawn_rays';
+  weather: 'sunset_dust' | 'forest_fog' | 'lake_mist' | 'storm_rain' | 'cathedral_haze' | 'dawn_rays' | 'ashen_embers' | 'snowfall' | 'storm_embers';
   platforms: Platform[];
   enemies: Omit<Enemy, 'vx' | 'vy' | 'animTimer' | 'actionTimer' | 'invincibleTimer' | 'isGrounded'>[];
   npcs: NPCData[];

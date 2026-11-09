@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { soundEngine } from '../audio/soundManager';
+import { particleEngine } from '../game/particleSystem';
 import { PlayerStats, MemoryShard } from '../types';
 import { WORLD_AREAS } from '../game/worldData';
 import { BESTIARY_ENTRIES, BestiaryEntry } from '../game/bestiaryData';
@@ -10,7 +11,7 @@ import { ControlsTab } from './ControlsTab';
 interface PauseMenuProps {
   player: PlayerStats;
   crtEnabled: boolean;
-  initialTab?: 'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound';
+  initialTab?: 'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound' | 'weather';
   onToggleCrt: () => void;
   onResume: () => void;
   onQuitToMenu: () => void;
@@ -24,12 +25,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   onResume,
   onQuitToMenu
 }) => {
-  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'main' | 'controls' | 'codex' | 'bestiary' | 'achievements' | 'sound' | 'weather'>(initialTab);
   const [inspectedEntry, setInspectedEntry] = useState<BestiaryEntry | null>(null);
   const [isMuted, setIsMuted] = useState(soundEngine.isSoundMuted());
   const [masterVol, setMasterVol] = useState(0.8);
   const [musicVol, setMusicVol] = useState(0.65);
   const [sfxVol, setSfxVol] = useState(0.85);
+  const [activeWeatherOverride, setActiveWeatherOverride] = useState<string | null>(particleEngine.getWeatherOverride());
+  const [weatherIntensity, setWeatherIntensityState] = useState<number>(particleEngine.getWeatherIntensity());
 
   const handleToggleMute = () => {
     const next = !isMuted;
@@ -118,6 +121,16 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               }`}
             >
               AUDIO
+            </button>
+            <button
+              onClick={() => setActiveTab('weather')}
+              className={`px-2 py-1 text-[9px] uppercase font-bold border-2 transition cursor-pointer ${
+                activeTab === 'weather'
+                  ? 'bg-[#ecc25e] text-black border-[#f8f8f8]'
+                  : 'bg-[#181818] text-[#909090] border-[#303030]'
+              }`}
+            >
+              WEATHER ❄
             </button>
           </div>
         </div>
@@ -355,6 +368,83 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   TEST PHASE 3
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 6: Dynamic Weather & Atmospheric Particles */}
+        {activeTab === 'weather' && (
+          <div className="flex flex-col gap-3 py-1 text-xs">
+            <div className="flex items-center justify-between border-b border-[#303030] pb-1.5">
+              <span className="text-[#f8f870] font-bold text-[11px] uppercase tracking-wider">
+                ATMOSPHERIC WEATHER SYSTEM
+              </span>
+              <span className="text-[#a0a0a0] text-[9px]">
+                {activeWeatherOverride ? `OVERRIDE: ${activeWeatherOverride.toUpperCase()}` : 'AREA DYNAMIC'}
+              </span>
+            </div>
+
+            <p className="text-[#c0c0c0] text-[10px] leading-relaxed">
+              Dynamic particle overlays simulate gothic environmental ambiance across Eldoria: burning cathedral embers, drifting snowfall on Moonlit Lake, torrential rain in the Fallen Kingdom, and twilight leaves.
+            </p>
+
+            {/* Weather Presets */}
+            <div className="flex flex-col gap-1.5 mt-1">
+              <span className="text-[#c0c0c0] text-[9px] uppercase font-bold tracking-wider">
+                SELECT AMBIENT WEATHER PRESET
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { id: null, label: '🌐 AREA DEFAULT', desc: 'Auto per zone' },
+                  { id: 'ashen_embers', label: '🔥 FALLING EMBERS', desc: 'Cathedral / Pyre' },
+                  { id: 'snowfall', label: '❄ LIGHT SNOWFALL', desc: 'Moonlit Lake' },
+                  { id: 'storm_rain', label: '🌧 TEMPEST RAIN', desc: 'Fallen Kingdom' },
+                  { id: 'storm_embers', label: '🌪 EMBER STORM', desc: 'Gale wind fury' },
+                  { id: 'sunset_dust', label: '🍂 TWILIGHT LEAVES', desc: 'Forgotten Village' }
+                ].map(opt => {
+                  const isSelected = activeWeatherOverride === opt.id;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      onClick={() => {
+                        setActiveWeatherOverride(opt.id);
+                        particleEngine.setWeatherOverride(opt.id);
+                        soundEngine.playMenuBeep(true);
+                      }}
+                      className={`p-2 flex flex-col items-start border-2 text-left cursor-pointer transition ${
+                        isSelected
+                          ? 'bg-[#2a1b38] border-[#f8a020] text-[#f8f870]'
+                          : 'bg-[#141414] border-[#404040] hover:border-[#808080] text-[#c0c0c0]'
+                      }`}
+                    >
+                      <span className="text-[10px] font-bold">{opt.label}</span>
+                      <span className="text-[8px] text-[#909090] mt-0.5">{opt.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Particle Density Slider */}
+            <div className="mt-2 pt-2 border-t border-[#303030]">
+              <div className="flex justify-between text-[#c0c0c0] mb-1 text-[10px]">
+                <span>PARTICLE INTENSITY & DENSITY</span>
+                <span className="text-[#f8a020] font-bold">{Math.round(weatherIntensity * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min="0.3"
+                max="2.2"
+                step="0.1"
+                value={weatherIntensity}
+                onChange={e => {
+                  const val = parseFloat(e.target.value);
+                  setWeatherIntensityState(val);
+                  particleEngine.setWeatherIntensity(val);
+                }}
+                className="w-full accent-[#f8a020] cursor-pointer"
+              />
             </div>
           </div>
         )}

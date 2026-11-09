@@ -315,7 +315,7 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
     spawnX: 60,
     spawnY: 290,
     ambientLight: 'rgba(6, 12, 34, 0.52)',
-    weather: 'lake_mist',
+    weather: 'snowfall',
     platforms: [
       // Cliffside ledges overlooking the vast mirror lake
       { x: 0, y: 330, width: 420, height: 50, type: 'solid', theme: 'cliff' },
@@ -631,7 +631,7 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
     spawnX: 60,
     spawnY: 470,
     ambientLight: 'rgba(20, 10, 28, 0.46)',
-    weather: 'cathedral_haze',
+    weather: 'ashen_embers',
     platforms: [
       // Monumental flagstone nave floor
       { x: 0, y: 500, width: 600, height: 60, type: 'solid', theme: 'cathedral_flagstone' },
