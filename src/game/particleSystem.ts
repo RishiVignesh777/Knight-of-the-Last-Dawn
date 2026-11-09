@@ -3,10 +3,20 @@ import { PALETTE, drawPixelRect } from './pixelArtHelper';
 
 export class ParticleSystem {
   private particles: Particle[] = [];
-  private readonly maxParticles = 350;
+  private readonly maxParticles = 400;
   private weatherOverride: string | null = null;
   private weatherIntensity: number = 1.0;
   private windTimer: number = 0;
+
+  // Dynamic Weather Transition State
+  private currentWeather: string = 'sunset_dust';
+  private targetWeather: string = 'sunset_dust';
+  private transitionTimer: number = 0;
+  private transitionDuration: number = 3.0; // Smooth 3-second crossfade
+  private transitionProgress: number = 1.0; // 0.0 -> 1.0
+  private previousWeather: string = 'sunset_dust';
+  private lightningTimer: number = 0;
+  private lightningFlash: boolean = false;
 
   public setWeatherOverride(weather: string | null) {
     this.weatherOverride = weather;
@@ -14,6 +24,18 @@ export class ParticleSystem {
 
   public getWeatherOverride(): string | null {
     return this.weatherOverride;
+  }
+
+  public getCurrentWeather(): string {
+    return this.weatherOverride || this.currentWeather;
+  }
+
+  public getTargetWeather(): string {
+    return this.weatherOverride || this.targetWeather;
+  }
+
+  public getTransitionProgress(): number {
+    return this.transitionProgress;
   }
 
   public setWeatherIntensity(intensity: number) {
@@ -24,9 +46,49 @@ export class ParticleSystem {
     return this.weatherIntensity;
   }
 
+  // Smoothly crossfades to a new weather type over transitionDuration seconds
+  public transitionToWeather(newWeather: string, duration: number = 3.0) {
+    if (this.targetWeather === newWeather && this.currentWeather === newWeather) {
+      return;
+    }
+    if (this.targetWeather === newWeather && this.transitionProgress < 1.0) {
+      return; // Already transitioning to this weather
+    }
+
+    this.previousWeather = this.currentWeather;
+    this.targetWeather = newWeather;
+    this.transitionDuration = Math.max(0.5, duration);
+    this.transitionTimer = 0;
+    this.transitionProgress = 0.0;
+  }
+
   public update(dt: number) {
     this.windTimer += dt;
-    const globalWind = Math.sin(this.windTimer * 0.7) * 18;
+    const globalWind = Math.sin(this.windTimer * 0.7) * 22;
+
+    // Advance weather transition
+    if (this.transitionProgress < 1.0) {
+      this.transitionTimer += dt;
+      this.transitionProgress = Math.min(1.0, this.transitionTimer / this.transitionDuration);
+      if (this.transitionProgress >= 1.0) {
+        this.currentWeather = this.targetWeather;
+      }
+    }
+
+    // Heavy storm periodic lightning timer
+    const active = this.getCurrentWeather();
+    if (active === 'heavy_storm') {
+      this.lightningTimer += dt;
+      if (this.lightningTimer > 4.5 + Math.random() * 3.5) {
+        this.lightningTimer = 0;
+        this.lightningFlash = true;
+        setTimeout(() => {
+          this.lightningFlash = false;
+        }, 80);
+      }
+    } else {
+      this.lightningFlash = false;
+    }
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -43,8 +105,16 @@ export class ParticleSystem {
       if (p.type === 'dust' || p.type === 'blood') {
         p.vy += 320 * dt;
       } else if (p.type === 'rain') {
-        p.vy = 400;
-        p.vx = -50 + globalWind * 0.5;
+        p.vy = 420;
+        p.vx = -60 + globalWind * 0.6;
+      } else if (p.type === 'hail') {
+        // Fast, heavy hail pellets with ground bounces
+        p.vy = 480;
+        p.vx = -70 + globalWind * 0.4;
+      } else if (p.type === 'mist') {
+        // Thick billowing low-velocity fog bank drifting across screen
+        p.vx = (Math.sin(p.life * 1.5 + p.y * 0.04) * 12 + globalWind * 0.3);
+        p.vy = Math.cos(p.life * 1.2) * 4;
       } else if (p.type === 'leaf') {
         p.vx = Math.sin(p.life * 4) * 20 + globalWind * 0.4;
         p.vy = 35;
@@ -236,7 +306,7 @@ export class ParticleSystem {
     }
   }
 
-  // Dynamic Atmospheric Weather Particles (Falling embers, light snowfall, ash, storm rain, dawn rays)
+  // Dynamic Atmospheric Weather Particles with smooth crossfading transitions
   public spawnWeatherParticles(
     areaWeather: string,
     camX: number,
@@ -244,12 +314,126 @@ export class ParticleSystem {
     screenW: number,
     screenH: number
   ) {
-    const activeWeather = this.weatherOverride || areaWeather;
-    const intensity = this.weatherIntensity;
+    const activeOverride = this.weatherOverride;
 
-    if (activeWeather === 'ashen_embers' || activeWeather === 'cathedral_haze') {
+    if (activeOverride) {
+      this.spawnWeatherForType(activeOverride, this.weatherIntensity, camX, camY, screenW, screenH);
+      return;
+    }
+
+    // Auto location-based transition check
+    if (this.targetWeather !== areaWeather) {
+      this.transitionToWeather(areaWeather, 2.8);
+    }
+
+    if (this.transitionProgress >= 1.0) {
+      // Steady-state single weather
+      this.spawnWeatherForType(this.currentWeather, this.weatherIntensity, camX, camY, screenW, screenH);
+    } else {
+      // Dynamic crossfade: blend between outgoing previous weather and incoming target weather
+      const p = this.transitionProgress;
+      const outgoingIntensity = this.weatherIntensity * (1.0 - p);
+      const incomingIntensity = this.weatherIntensity * p;
+
+      if (outgoingIntensity > 0.05) {
+        this.spawnWeatherForType(this.previousWeather, outgoingIntensity, camX, camY, screenW, screenH);
+      }
+      if (incomingIntensity > 0.05) {
+        this.spawnWeatherForType(this.targetWeather, incomingIntensity, camX, camY, screenW, screenH);
+      }
+    }
+  }
+
+  // Individual weather type particle emitter
+  private spawnWeatherForType(
+    weather: string,
+    intensity: number,
+    camX: number,
+    camY: number,
+    screenW: number,
+    screenH: number
+  ) {
+    if (weather === 'heavy_storm') {
+      // HEAVY STORM: Torrential diagonal sheets of rain + stinging hail + ambient mist + lightning
+      const stormRainCount = Math.floor(6 * intensity);
+      for (let i = 0; i < stormRainCount; i++) {
+        this.emit({
+          x: Math.floor(camX + Math.random() * (screenW + 100) - 20),
+          y: Math.floor(camY - 14),
+          vx: -70 - Math.random() * 30,
+          vy: 420 + Math.random() * 80,
+          life: 0.55,
+          maxLife: 0.55,
+          color: Math.random() < 0.3 ? PALETTE.WHITE : PALETTE.ICE_WHITE,
+          size: 1,
+          type: 'rain'
+        });
+      }
+
+      // Hard white ice hail pellets
+      const hailCount = Math.floor(2 * intensity);
+      for (let i = 0; i < hailCount; i++) {
+        this.emit({
+          x: Math.floor(camX + Math.random() * (screenW + 80)),
+          y: Math.floor(camY - 10),
+          vx: -80 - Math.random() * 25,
+          vy: 480 + Math.random() * 60,
+          life: 0.45,
+          maxLife: 0.45,
+          color: PALETTE.WHITE,
+          size: 2,
+          type: 'hail'
+        });
+      }
+
+      // Wind-blown spray mist
+      if (Math.random() < 0.4 * intensity) {
+        this.emit({
+          x: Math.floor(camX + Math.random() * screenW),
+          y: Math.floor(camY + Math.random() * screenH),
+          vx: -60 - Math.random() * 20,
+          vy: 20 + Math.random() * 40,
+          life: 1.2,
+          maxLife: 1.2,
+          color: PALETTE.PALE_STONE,
+          size: 2,
+          type: 'dust'
+        });
+      }
+    } else if (weather === 'thick_fog') {
+      // THICK FOG: Multi-tiered dense cloudbanks, creeping ground mist, floating spores
+      const fogPuffCount = Math.floor(3 * intensity);
+      for (let i = 0; i < fogPuffCount; i++) {
+        this.emit({
+          x: Math.floor(camX + Math.random() * (screenW + 60) - 30),
+          y: Math.floor(camY + Math.random() * screenH),
+          vx: -12 + Math.random() * 24,
+          vy: -4 + Math.random() * 8,
+          life: 3.5 + Math.random() * 2.5,
+          maxLife: 6.0,
+          color: Math.random() < 0.4 ? PALETTE.PALE_STONE : (Math.random() < 0.7 ? PALETTE.BRIGHT_GRAY : PALETTE.LIGHT_GRAY),
+          size: Math.random() < 0.4 ? 4 : (Math.random() < 0.8 ? 3 : 2),
+          type: 'mist'
+        });
+      }
+
+      // Occasional swamp/forest firefly piercing through the dense shroud
+      if (Math.random() < 0.25 * intensity) {
+        this.emit({
+          x: Math.floor(camX + Math.random() * screenW),
+          y: Math.floor(camY + Math.random() * screenH),
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          life: 2.5,
+          maxLife: 2.5,
+          color: PALETTE.MINT_GREEN,
+          size: 2,
+          type: 'firefly'
+        });
+      }
+    } else if (weather === 'ashen_embers' || weather === 'cathedral_haze') {
       // Falling embers and floating incense sparks (warm gold, arterial red, blazing amber)
-      const spawnCount = Math.floor(2 * intensity);
+      const spawnCount = Math.floor(2.2 * intensity);
       for (let i = 0; i < spawnCount; i++) {
         const isSpur = Math.random() < 0.4;
         const emberColor = isSpur
@@ -283,7 +467,7 @@ export class ParticleSystem {
           type: 'ash'
         });
       }
-    } else if (activeWeather === 'snowfall') {
+    } else if (weather === 'snowfall') {
       // Serene light snowfall (crystal ice white, pale alabaster, soft fluttering movement)
       const snowCount = Math.floor(3 * intensity);
       for (let i = 0; i < snowCount; i++) {
@@ -300,7 +484,7 @@ export class ParticleSystem {
           type: 'snow'
         });
       }
-    } else if (activeWeather === 'storm_embers') {
+    } else if (weather === 'storm_embers') {
       // Fierce burning embers swept by violent winds
       const stormEmberCount = Math.floor(4 * intensity);
       for (let i = 0; i < stormEmberCount; i++) {
@@ -316,8 +500,8 @@ export class ParticleSystem {
           type: 'cinder'
         });
       }
-    } else if (activeWeather === 'storm_rain') {
-      // Heavy torrential downpour with splashing raindrop streaks
+    } else if (weather === 'storm_rain') {
+      // Regular stormy rain
       const rainCount = Math.floor(4 * intensity);
       for (let i = 0; i < rainCount; i++) {
         this.emit({
@@ -332,7 +516,6 @@ export class ParticleSystem {
           type: 'rain'
         });
       }
-      // Occasional drifting mist mist droplets
       if (Math.random() < 0.25 * intensity) {
         this.emit({
           x: Math.floor(camX + Math.random() * screenW),
@@ -346,7 +529,7 @@ export class ParticleSystem {
           type: 'dust'
         });
       }
-    } else if (activeWeather === 'sunset_dust') {
+    } else if (weather === 'sunset_dust') {
       // Golden twilight leaves & glowing dusk motes
       if (Math.random() < 0.28 * intensity) {
         this.emit({
@@ -361,7 +544,6 @@ export class ParticleSystem {
           type: 'leaf'
         });
       }
-      // Warm floating dusk motes
       if (Math.random() < 0.3 * intensity) {
         this.emit({
           x: Math.floor(camX + Math.random() * screenW),
@@ -375,8 +557,8 @@ export class ParticleSystem {
           type: 'ember'
         });
       }
-    } else if (activeWeather === 'forest_fog' || activeWeather === 'lake_mist') {
-      // Wandering luminous fireflies and mystical fog motes
+    } else if (weather === 'forest_fog' || weather === 'lake_mist') {
+      // Luminous fireflies and soft lake mist motes
       if (Math.random() < 0.32 * intensity) {
         this.emit({
           x: Math.floor(camX + Math.random() * screenW),
@@ -385,26 +567,25 @@ export class ParticleSystem {
           vy: (Math.random() - 0.5) * 8,
           life: 2.0 + Math.random() * 1.5,
           maxLife: 3.5,
-          color: activeWeather === 'forest_fog' ? PALETTE.MINT_GREEN : PALETTE.CYAN_HIGHLIGHT,
+          color: weather === 'forest_fog' ? PALETTE.MINT_GREEN : PALETTE.CYAN_HIGHLIGHT,
           size: 2,
           type: 'firefly'
         });
       }
-      // Floating water mist / spore
-      if (Math.random() < 0.2 * intensity) {
+      if (Math.random() < 0.25 * intensity) {
         this.emit({
           x: Math.floor(camX + Math.random() * screenW),
           y: Math.floor(camY + Math.random() * screenH),
-          vx: (Math.random() - 0.5) * 14,
-          vy: -4 - Math.random() * 6,
-          life: 3.0,
-          maxLife: 3.0,
-          color: PALETTE.WHITE,
-          size: 1,
-          type: 'snow'
+          vx: (Math.random() - 0.5) * 10,
+          vy: -2 + Math.random() * 4,
+          life: 3.2,
+          maxLife: 3.2,
+          color: PALETTE.PALE_STONE,
+          size: 3,
+          type: 'mist'
         });
       }
-    } else if (activeWeather === 'dawn_rays') {
+    } else if (weather === 'dawn_rays') {
       // Golden dawn motes and radiant sun particles
       if (Math.random() < 0.35 * intensity) {
         this.emit({
@@ -510,6 +691,18 @@ export class ParticleSystem {
         drawPixelRect(ctx, PALETTE.WHITE, rx + half, ry - half, 1, 1);
         drawPixelRect(ctx, PALETTE.WHITE, rx - half, ry + half, 1, 1);
         drawPixelRect(ctx, PALETTE.WHITE, rx + half, ry + half, 1, 1);
+      } else if (p.type === 'hail') {
+        // High-velocity solid ice hail pellets
+        const s = Math.floor(p.size);
+        drawPixelRect(ctx, PALETTE.WHITE, rx, ry, s, s);
+        drawPixelRect(ctx, PALETTE.ICE_WHITE, rx + 1, ry + 1, 1, 1);
+      } else if (p.type === 'mist') {
+        // Soft pixelated fog puff: rounded stepped cross cloud bank
+        const s = Math.floor(p.size);
+        const half = Math.floor(s / 2);
+        drawPixelRect(ctx, p.color, rx - half, ry, s, s);
+        drawPixelRect(ctx, p.color, rx, ry - half, s, s);
+        drawPixelRect(ctx, PALETTE.WHITE, rx, ry, Math.max(1, s - 2), Math.max(1, s - 2));
       } else if (p.type === 'leaf') {
         // Drifting dusk leaf with fluttering 2x2 / 3x2 angle
         const flutter = Math.floor(p.life * 5) % 2 === 0;
@@ -519,15 +712,23 @@ export class ParticleSystem {
         drawPixelRect(ctx, p.color, rx, ry, s, s);
       }
     }
+
+    // Heavy Storm sudden lightning strobe illumination
+    if (this.lightningFlash) {
+      ctx.fillStyle = 'rgba(238, 242, 255, 0.28)';
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+
     ctx.restore();
   }
 
-  // Render front-layer atmospheric weather overlay (e.g., drifting foreground embers and snowflakes)
+  // Render front-layer atmospheric weather overlay (e.g., drifting foreground embers, snowflakes, and thick fog banks)
   public renderWeatherForeground(ctx: CanvasRenderingContext2D, camX: number, camY: number) {
     ctx.save();
+
     for (const p of this.particles) {
-      // Only render overlay particles marked as weather (embers, snow, cinders) that have larger depth
-      if (p.type !== 'ember' && p.type !== 'snow' && p.type !== 'cinder' && p.type !== 'leaf') {
+      // Only render overlay particles marked as weather that have larger depth
+      if (p.type !== 'ember' && p.type !== 'snow' && p.type !== 'cinder' && p.type !== 'leaf' && p.type !== 'mist' && p.type !== 'hail') {
         continue;
       }
       // Alternate flakes/embers for foreground layer based on size
@@ -554,6 +755,11 @@ export class ParticleSystem {
         drawPixelRect(ctx, PALETTE.GOLD, rx, ry, 1, 1);
       } else if (p.type === 'leaf') {
         drawPixelRect(ctx, p.color, rx, ry, 3, 2);
+      } else if (p.type === 'hail') {
+        drawPixelRect(ctx, PALETTE.WHITE, rx, ry, 2, 2);
+      } else if (p.type === 'mist' && p.size >= 3) {
+        // Floating foreground cloud wisps
+        drawPixelRect(ctx, p.color, rx - 1, ry, p.size, p.size);
       }
     }
     ctx.restore();

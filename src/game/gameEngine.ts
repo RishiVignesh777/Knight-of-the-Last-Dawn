@@ -306,10 +306,11 @@ export class GameEngine {
     parallaxEngine.update(clampedDt);
     particleEngine.update(clampedDt);
 
-    // Weather particles
+    // Dynamic Atmospheric Weather with location-based transitions
     const currentArea = WORLD_AREAS[this.currentAreaId];
+    const targetWeather = this.computeDynamicWeatherForLocation();
     particleEngine.spawnWeatherParticles(
-      currentArea.weather,
+      targetWeather,
       this.camera.x,
       this.camera.y,
       VIRTUAL_WIDTH,
@@ -352,6 +353,48 @@ export class GameEngine {
 
     // Update previous keys for edge detection
     this.prevKeys = { ...this.keys };
+  }
+
+  // Compute contextual dynamic weather based on current area and in-zone location / boss state
+  public computeDynamicWeatherForLocation(): string {
+    const area = WORLD_AREAS[this.currentAreaId];
+    const px = this.player.x;
+
+    // Boss fight special dynamic override: Tower summit intensifies into an ember tempest
+    if (this.currentAreaId === AreaId.TOWER && (this.bossEncountered || px > 980)) {
+      return 'storm_embers';
+    }
+
+    // Capital: Approaches to the ruined grand bastion (x > 1100) trigger violent heavy storm
+    if (this.currentAreaId === AreaId.CAPITAL) {
+      if (px > 1050) {
+        return 'heavy_storm';
+      }
+      return 'storm_rain';
+    }
+
+    // Whispering Forest: Deep ancient bramble canopy (x > 800) descends into thick impenetrable fog
+    if (this.currentAreaId === AreaId.FOREST) {
+      if (px > 750) {
+        return 'thick_fog';
+      }
+      return 'forest_fog';
+    }
+
+    // Moonlit Lake: Low cliff edge / open water crossings trigger heavy snowfall
+    if (this.currentAreaId === AreaId.LAKE) {
+      if (px > 700) {
+        return 'snowfall';
+      }
+      return 'lake_mist';
+    }
+
+    // Cathedral: Nave and Altar
+    if (this.currentAreaId === AreaId.CATHEDRAL) {
+      return 'ashen_embers';
+    }
+
+    return area.weather || 'sunset_dust';
   }
 
   private pollGamepad() {

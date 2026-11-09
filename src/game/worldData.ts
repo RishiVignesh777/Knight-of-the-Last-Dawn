@@ -152,7 +152,7 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
     spawnX: 60,
     spawnY: 330,
     ambientLight: 'rgba(6, 18, 14, 0.50)',
-    weather: 'forest_fog',
+    weather: 'thick_fog',
     platforms: [
       // Ground with uneven roots
       { x: 0, y: 370, width: 480, height: 50, type: 'solid', theme: 'moss_ground' },
@@ -474,7 +474,7 @@ export const WORLD_AREAS: Record<AreaId, AreaData> = {
     spawnX: 60,
     spawnY: 340,
     ambientLight: 'rgba(28, 12, 26, 0.56)',
-    weather: 'storm_rain',
+    weather: 'heavy_storm',
     platforms: [
       // Street stones & ruined castle walls
       { x: 0, y: 380, width: 500, height: 60, type: 'solid', theme: 'capital_paving' },

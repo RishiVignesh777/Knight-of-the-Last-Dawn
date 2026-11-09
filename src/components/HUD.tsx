@@ -136,7 +136,9 @@ export const HUD: React.FC<HUDProps> = ({
             <div className="flex items-center justify-end gap-1.5">
               <span className="text-[#909090] text-[9px] font-bold">
                 {(() => {
-                  const w = particleEngine.getWeatherOverride() || currentArea.weather;
+                  const w = particleEngine.getCurrentWeather();
+                  if (w === 'heavy_storm') return '⚡ HEAVY STORM';
+                  if (w === 'thick_fog') return '🌫 THICK FOG';
                   if (w === 'ashen_embers') return '🔥 ASHEN EMBERS';
                   if (w === 'snowfall') return '❄ DRIFTING SNOW';
                   if (w === 'storm_rain') return '🌧 TEMPEST RAIN';

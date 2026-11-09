@@ -395,12 +395,13 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
-                  { id: null, label: '🌐 AREA DEFAULT', desc: 'Auto per zone' },
-                  { id: 'ashen_embers', label: '🔥 FALLING EMBERS', desc: 'Cathedral / Pyre' },
-                  { id: 'snowfall', label: '❄ LIGHT SNOWFALL', desc: 'Moonlit Lake' },
-                  { id: 'storm_rain', label: '🌧 TEMPEST RAIN', desc: 'Fallen Kingdom' },
-                  { id: 'storm_embers', label: '🌪 EMBER STORM', desc: 'Gale wind fury' },
-                  { id: 'sunset_dust', label: '🍂 TWILIGHT LEAVES', desc: 'Forgotten Village' }
+                  { id: null, label: '🌐 LOCATION AUTO', desc: 'Transitions by zone & sub-area' },
+                  { id: 'heavy_storm', label: '⚡ HEAVY STORM', desc: 'Torrential sheets, hail & lightning' },
+                  { id: 'thick_fog', label: '🌫 THICK FOG', desc: 'Dense billowing shrouds & mist' },
+                  { id: 'ashen_embers', label: '🔥 FALLING EMBERS', desc: 'Cathedral incense & cinders' },
+                  { id: 'snowfall', label: '❄ LIGHT SNOWFALL', desc: 'Moonlit Lake flurry' },
+                  { id: 'storm_embers', label: '🌪 EMBER STORM', desc: 'High Spire boss tempest' },
+                  { id: 'sunset_dust', label: '🍂 TWILIGHT LEAVES', desc: 'Forgotten Village breeze' }
                 ].map(opt => {
                   const isSelected = activeWeatherOverride === opt.id;
                   return (
